@@ -110,7 +110,7 @@ const AddUsers = () => {
     e.preventDefault();
     try {
       console.log('Submitting officer data:', officerData);
-      const response = await axios.post('http://localhost:5001/api/admin/addOfficer', officerData);
+      const response = await axios.post('http://localhost:5000/api/admin/addOfficer', officerData);
       setSnackbar({
         open: true,
         message: 'Officer added successfully!',
