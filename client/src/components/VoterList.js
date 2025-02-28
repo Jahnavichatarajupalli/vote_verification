@@ -100,7 +100,7 @@ const VoterList = ({ onLogout }) => {
                             <div key={voter.epicNo} className="voter-card">
                                 <div className="voter-photo">
                                     {voter.photo ? (
-                                        <img src={`http://localhost:5000/${voter.photo}`} alt={voter.name} />
+                                        <img src={`${voter.photo}`} alt={voter.name} />
                                     ) : (
                                         <div className="photo-placeholder">
                                             {voter.name[0].toUpperCase()}
