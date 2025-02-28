@@ -1,7 +1,11 @@
 const express = require('express');
+const app=express()
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
 const Voter = require('../models/Voter');
+const cors=require('cors')
+app.use(cors())
+
 
 // @route   GET /api/voters/statistics
 // @desc    Get voter statistics for polling station
@@ -16,13 +20,13 @@ router.get('/statistics', verifyToken, async (req, res) => {
         // Get voted voters count
         const votedCount = await Voter.countDocuments({ 
             pollingStation,
-            hasVoted: true 
+            voted: true 
         });
         
         // Get non-voted voters count
         const nonVotedCount = await Voter.countDocuments({ 
             pollingStation,
-            hasVoted: false 
+            voted: false 
         });
 
         res.json({
@@ -49,14 +53,15 @@ router.get('/list/:status', verifyToken, async (req, res) => {
         
         // Add hasVoted condition based on status
         if (status === 'voted') {
-            query.hasVoted = true;
+            query.voted = true;
         } else if (status === 'non-voted') {
-            query.hasVoted = false;
+            query.voted = false;
         }
         
         const voters = await Voter.find(query)
             .select('name epicNo age address pollingStation hasVoted')
             .sort('name');
+            console.log(voters)
         
         res.json(voters);
     } catch (error) {
@@ -70,20 +75,32 @@ router.get('/list/:status', verifyToken, async (req, res) => {
 // @access  Private
 router.post('/verify', verifyToken, async (req, res) => {
     try {
-        const { epicNo } = req.body;
+        const {epicNo } = req.body;
+        const pollingStation = req.officer.pollingStation;
 
-        // Find voter by EPIC number
-        const voter = await Voter.findOne({ epicNo });
+        console.log("🔍 Received EPIC No:", epicNo);
+        console.log("🔍 Officer's Polling Station:", pollingStation);
 
-        if (!voter) {
-            return res.status(404).json({ message: 'Voter not found' });
+        if (!pollingStation) {
+            return res.status(403).json({ message: 'Polling station not found in token' });
         }
 
-        if (voter.hasVoted) {
+        // Log voters with the same epicNo to check if pollingStation is the issue
+        const voterWithoutPollingCheck = await Voter.findOne({epicNo});
+        // console.log("🔍 Voter found (without pollingStation check):", voterWithoutPollingCheck);
+
+        // Now apply pollingStation filter
+        const voter = await Voter.findOne({ pollingStation });
+        // console.log("✅ Voter found (with pollingStation check):", voter);
+
+        if (!voter) {
+            return res.status(404).json({ message: 'Voter not found in this polling station' });
+        }
+
+        if (voter.voted) {
             return res.status(400).json({ message: 'Voter has already cast their vote' });
         }
 
-        // Return all voter details
         res.json({
             voter: {
                 id: voter._id,
@@ -94,15 +111,16 @@ router.post('/verify', verifyToken, async (req, res) => {
                 address: voter.address,
                 pollingStation: voter.pollingStation,
                 photo: voter.photo,
-                hasVoted: voter.hasVoted
+                voted: voter.voted
             }
         });
 
     } catch (error) {
-        console.error('Voter verification error:', error);
+        console.error('❌ Voter verification error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 // @route   POST /api/voters/mark-voted
 // @desc    Mark a voter as having voted
@@ -134,7 +152,8 @@ router.post('/mark-voted', verifyToken, async (req, res) => {
 // Get all voters
 router.get('/all', verifyToken, async (req, res) => {
     try {
-        const voters = await Voter.find({});
+        const pollingStation = req.officer.pollingStation;
+        const voters = await Voter.find({pollingStation });
         res.json({ voters });
     } catch (error) {
         console.error('Error fetching all voters:', error);
@@ -145,7 +164,8 @@ router.get('/all', verifyToken, async (req, res) => {
 // Get voted voters
 router.get('/voted', verifyToken, async (req, res) => {
     try {
-        const voters = await Voter.find({ hasVoted: true });
+        const pollingStation = req.officer.pollingStation;
+        const voters = await Voter.find({ pollingStation ,voted: true });
         res.json({ voters });
     } catch (error) {
         console.error('Error fetching voted voters:', error);
@@ -156,7 +176,8 @@ router.get('/voted', verifyToken, async (req, res) => {
 // Get yet to vote voters
 router.get('/yet-to-vote', verifyToken, async (req, res) => {
     try {
-        const voters = await Voter.find({ hasVoted: false });
+        const pollingStation = req.officer.pollingStation;
+        const voters = await Voter.find({pollingStation, voted: false });
         res.json({ voters });
     } catch (error) {
         console.error('Error fetching yet to vote voters:', error);

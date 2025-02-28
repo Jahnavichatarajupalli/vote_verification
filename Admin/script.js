@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // API Base URL
-    const API_BASE_URL = 'http://localhost:5001';
+    const API_BASE_URL = 'http://localhost:5000';
 
     // Tab switching functionality
     const tabs = document.querySelectorAll('.nav-link');

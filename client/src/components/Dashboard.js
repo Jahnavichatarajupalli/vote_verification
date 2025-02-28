@@ -109,51 +109,33 @@ const Dashboard = ({ onLogout }) => {
                     </div>
                 )}
 
-                {step === 'face' && voterData && (
-                    <div className="verification-step">
-                        <h2>Step 2: Face Verification</h2>
-                        <div className="voter-details">
-                            <h3>Voter Details</h3>
-                            <div className="details-grid">
-                                <div className="detail-item">
-                                    <label>Name:</label>
-                                    <span>{voterData.name}</span>
-                                </div>
-                                <div className="detail-item">
-                                    <label>EPIC No:</label>
-                                    <span>{voterData.epicNo}</span>
-                                </div>
-                                <div className="detail-item">
-                                    <label>Age:</label>
-                                    <span>{voterData.age}</span>
-                                </div>
-                                <div className="detail-item">
-                                    <label>Gender:</label>
-                                    <span>{voterData.gender}</span>
-                                </div>
-                                <div className="detail-item">
-                                    <label>Address:</label>
-                                    <span>{voterData.address}</span>
-                                </div>
-                                <div className="detail-item">
-                                    <label>Polling Station:</label>
-                                    <span>{voterData.pollingStation}</span>
-                                </div>
-                            </div>
-                            {voterData.photo && (
-                                <div className="voter-photo">
-                                    <img src={voterData.photo} alt="Voter" />
-                                </div>
-                            )}
-                            <button 
-                                onClick={handleFaceVerification}
-                                className="verify-button"
-                            >
-                                Verify Face
-                            </button>
-                        </div>
-                    </div>
-                )}
+{step === 'face' && voterData && (
+    <div className="verification-step">
+        <h2>Step 2: Face Verification</h2>
+        <div className="voter-card">
+            <div className="voter-info">
+                <h3>Voter Details</h3>
+                <div className="details-grid">
+                    <div className="detail-item"><label>Name:</label> <span>{voterData.name}</span></div>
+                    <div className="detail-item"><label>EPIC No:</label> <span>{voterData.epicNo}</span></div>
+                    <div className="detail-item"><label>Age:</label> <span>{voterData.age}</span></div>
+                    <div className="detail-item"><label>Gender:</label> <span>{voterData.gender}</span></div>
+                    <div className="detail-item"><label>Address:</label> <span>{voterData.address}</span></div>
+                    <div className="detail-item"><label>Polling Station:</label> <span>{voterData.pollingStation}</span></div>
+                </div>
+            </div>
+            {voterData.photo && (
+                <div className="voter-photo">
+                    <img src={voterData.photo} alt="Voter" />
+                </div>
+            )}
+        </div>
+        <button onClick={handleFaceVerification} className="verify-button">
+            Verify Face
+        </button>
+    </div>
+)}
+
 
                 {step === 'approved' && (
                     <div className="verification-step">

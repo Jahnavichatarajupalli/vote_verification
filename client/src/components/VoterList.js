@@ -100,7 +100,7 @@ const VoterList = ({ onLogout }) => {
                             <div key={voter.epicNo} className="voter-card">
                                 <div className="voter-photo">
                                     {voter.photo ? (
-                                        <img src={`http://localhost:5000/${voter.photo}`} alt={voter.name} />
+                                        <img src={voter.photo} alt={voter.name} />
                                     ) : (
                                         <div className="photo-placeholder">
                                             {voter.name[0].toUpperCase()}
@@ -128,14 +128,14 @@ const VoterList = ({ onLogout }) => {
                                         <label>Address</label>
                                         <span>{voter.address}</span>
                                     </div>
-                                    {type !== 'all' && (
+                                    {/* {type !== 'all' && (
                                         <div className="info-group">
                                             <label>Status</label>
                                             <span className={`status ${voter.hasVoted ? 'voted' : 'not-voted'}`}>
                                                 {voter.hasVoted ? 'Voted' : 'Not Voted'}
                                             </span>
                                         </div>
-                                    )}
+                                    )} */}
                                 </div>
                             </div>
                         ))}
