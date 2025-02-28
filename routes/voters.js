@@ -83,13 +83,18 @@ router.post('/verify', verifyToken, async (req, res) => {
             return res.status(400).json({ message: 'Voter has already cast their vote' });
         }
 
-        // Return voter details for face recognition
+        // Return all voter details
         res.json({
             voter: {
                 id: voter._id,
                 name: voter.name,
                 epicNo: voter.epicNo,
-                photo: voter.photo
+                age: voter.age,
+                gender: voter.gender,
+                address: voter.address,
+                pollingStation: voter.pollingStation,
+                photo: voter.photo,
+                hasVoted: voter.hasVoted
             }
         });
 
@@ -122,6 +127,39 @@ router.post('/mark-voted', verifyToken, async (req, res) => {
 
     } catch (error) {
         console.error('Mark voted error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get all voters
+router.get('/all', verifyToken, async (req, res) => {
+    try {
+        const voters = await Voter.find({});
+        res.json({ voters });
+    } catch (error) {
+        console.error('Error fetching all voters:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get voted voters
+router.get('/voted', verifyToken, async (req, res) => {
+    try {
+        const voters = await Voter.find({ hasVoted: true });
+        res.json({ voters });
+    } catch (error) {
+        console.error('Error fetching voted voters:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get yet to vote voters
+router.get('/yet-to-vote', verifyToken, async (req, res) => {
+    try {
+        const voters = await Voter.find({ hasVoted: false });
+        res.json({ voters });
+    } catch (error) {
+        console.error('Error fetching yet to vote voters:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

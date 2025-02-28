@@ -7,14 +7,13 @@ const officerSchema = new mongoose.Schema({
     },
     phoneNumber: {
         type: String,
-        required: true,
-        unique: true
-    },
-    pollingStation: {
-        type: String,
         required: true
     },
     job: {
+        type: String,
+        required: true
+    },
+    pollingStation: {
         type: String,
         required: true
     },

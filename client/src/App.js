@@ -38,9 +38,9 @@ function App() {
             )
           } />
 
-          <Route path="/voters/:status" element={
+          <Route path="/voters/:type" element={
             isAuthenticated ? (
-              <Dashboard onLogout={handleLogout} />
+              <VoterList onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" replace />
             )

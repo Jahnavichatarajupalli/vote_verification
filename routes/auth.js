@@ -59,8 +59,9 @@ router.post('/login', async (req, res) => {
 
 // Get officer info
 router.get('/officer', verifyToken, async (req, res) => {
+    console.log("hii")
     try {
-        const officer = await Officer.findById(req.officer.id).select('-password');
+        const officer = await Officer.findById(req.officer.id)
         res.json(officer);
     } catch (err) {
         console.error(err.message);

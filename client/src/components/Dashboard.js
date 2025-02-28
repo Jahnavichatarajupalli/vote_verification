@@ -13,7 +13,6 @@ const Dashboard = ({ onLogout }) => {
     const [loading, setLoading] = useState(false);
     const [epicNo, setEpicNo] = useState('');
 
-    // Check authentication on mount and when token changes
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -60,7 +59,7 @@ const Dashboard = ({ onLogout }) => {
     };
 
     const handleLogout = () => {
-        localStorage.clear(); // Clear all localStorage items
+        localStorage.clear();
         onLogout();
         navigate('/login');
     };
@@ -99,27 +98,57 @@ const Dashboard = ({ onLogout }) => {
                                     required
                                 />
                             </div>
-                            <button type="submit" disabled={loading}>
-                                {loading ? 'Verifying...' : 'Verify Voter'}
+                            <button 
+                                type="submit" 
+                                className="verify-button"
+                                disabled={loading}
+                            >
+                                {loading ? 'Verifying...' : 'Verify EPIC'}
                             </button>
                         </form>
                     </div>
                 )}
 
-                {step === 'face' && (
+                {step === 'face' && voterData && (
                     <div className="verification-step">
                         <h2>Step 2: Face Verification</h2>
-                        <div className="voter-info">
-                            <h3>Voter Information:</h3>
-                            <p><strong>Name:</strong> {voterData.name}</p>
-                            <p><strong>EPIC Number:</strong> {voterData.epicNo}</p>
-                            <p><strong>Age:</strong> {voterData.age}</p>
-                            <p><strong>Address:</strong> {voterData.address}</p>
-                            <p><strong>Polling Station:</strong> {voterData.pollingStation}</p>
-                        </div>
-                        <div className="camera-container">
-                            <div className="camera-placeholder">Camera Feed Will Appear Here</div>
-                            <button onClick={handleFaceVerification} className="verify-button">
+                        <div className="voter-details">
+                            <h3>Voter Details</h3>
+                            <div className="details-grid">
+                                <div className="detail-item">
+                                    <label>Name:</label>
+                                    <span>{voterData.name}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <label>EPIC No:</label>
+                                    <span>{voterData.epicNo}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <label>Age:</label>
+                                    <span>{voterData.age}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <label>Gender:</label>
+                                    <span>{voterData.gender}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <label>Address:</label>
+                                    <span>{voterData.address}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <label>Polling Station:</label>
+                                    <span>{voterData.pollingStation}</span>
+                                </div>
+                            </div>
+                            {voterData.photo && (
+                                <div className="voter-photo">
+                                    <img src={voterData.photo} alt="Voter" />
+                                </div>
+                            )}
+                            <button 
+                                onClick={handleFaceVerification}
+                                className="verify-button"
+                            >
                                 Verify Face
                             </button>
                         </div>
@@ -127,11 +156,22 @@ const Dashboard = ({ onLogout }) => {
                 )}
 
                 {step === 'approved' && (
-                    <div className="verification-step approved">
-                        <h2>Voter Verified Successfully!</h2>
-                        <p>The voter has been verified and can proceed to vote.</p>
-                        <button onClick={handleReset} className="reset-button">
-                            Verify Next Voter
+                    <div className="verification-step">
+                        <h2>Step 3: Verification Complete</h2>
+                        <div className="success-message">
+                            Voter verified successfully!
+                        </div>
+                        <button 
+                            onClick={() => window.print()} 
+                            className="print-button"
+                        >
+                            Print Verification Slip
+                        </button>
+                        <button 
+                            onClick={handleReset}
+                            className="reset-button"
+                        >
+                            Verify Another Voter
                         </button>
                     </div>
                 )}
