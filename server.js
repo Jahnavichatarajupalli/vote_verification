@@ -47,14 +47,14 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname,'uploads')));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/voters', require('./routes/voters'));
 // app.use(cors());
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, '..', 'uploads');
+        const uploadDir = path.join(__dirname, 'uploads');
         if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
         cb(null, uploadDir);
     },
@@ -64,7 +64,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, fileFilter: (req, file, cb) => {
     file.mimetype.startsWith('image/') ? cb(null, true) : cb(new Error('Only image files are allowed!'), false);
-}, limits: { fileSize: 5 * 1024 * 1024 }});
+}});
 
 
 

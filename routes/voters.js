@@ -90,7 +90,7 @@ router.post('/verify', verifyToken, async (req, res) => {
         // console.log("🔍 Voter found (without pollingStation check):", voterWithoutPollingCheck);
 
         // Now apply pollingStation filter
-        const voter = await Voter.findOne({ pollingStation });
+        const voter = await Voter.findOne({ epicNo, pollingStation });
         // console.log("✅ Voter found (with pollingStation check):", voter);
 
         if (!voter) {
@@ -134,14 +134,23 @@ router.post('/mark-voted', verifyToken, async (req, res) => {
             return res.status(404).json({ message: 'Voter not found' });
         }
 
-        if (voter.hasVoted) {
+        if (voter.voted) {
             return res.status(400).json({ message: 'Voter has already cast their vote' });
         }
 
-        voter.hasVoted = true;
+        // Update voter status
+        voter.voted = true;
         await voter.save();
 
-        res.json({ message: 'Vote recorded successfully' });
+        res.json({ 
+            message: 'Vote recorded successfully',
+            voter: {
+                id: voter._id,
+                name: voter.name,
+                epicNo: voter.epicNo,
+                voted: voter.voted
+            }
+        });
 
     } catch (error) {
         console.error('Mark voted error:', error);
