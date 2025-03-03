@@ -216,15 +216,23 @@ const Navbar = ({ onLogout }) => {
                    
                        {showProfile && officerDetails && (
                            <div className="profile-dropdown">
+                               <div className="profile-header">
+                                   <h3 style={{color:"black"}}>{officerDetails.name}</h3>
+                                   <button 
+                                       className="close-profile"
+                                       onClick={() => setShowProfile(false)}
+                                   >
+                                       <i className="fas fa-times"></i>
+                                   </button>
+                               </div>
                                <div className="profile-details">
-                                   <h3>{officerDetails.name}</h3>
+                               {/* <p>Name: {officerDetails.name}</p> */}
                                    <p>Job: {officerDetails.job}</p>
                                    <p>Phone: {officerDetails.phoneNumber}</p>
                                    <p>Station: {officerDetails.pollingStation}</p>
                                    <p>Age: {officerDetails.age}</p>
                                    <p>Gender: {officerDetails.gender}</p>
                                </div>
-                              
                            </div>
                        )}
                    </div>

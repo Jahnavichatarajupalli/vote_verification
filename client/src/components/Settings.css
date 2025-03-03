@@ -1,0 +1,205 @@
+/* Root theme variables */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --border-color: #eeeeee;
+    --accent-color: #1976d2;
+    --hover-color: #f0f0f0;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --navbar-bg: #2c3e50;
+    --navbar-text: #ffffff;
+    --danger-color: #dc3545;
+    --danger-hover: #c82333;
+    --stat-total-bg: rgba(33, 150, 243, 0.3);
+    --stat-voted-bg: rgba(76, 175, 80, 0.3);
+    --stat-nonvoted-bg: rgba(244, 67, 54, 0.3);
+}
+
+[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --border-color: #404040;
+    --accent-color: #64b5f6;
+    --hover-color: #404040;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --navbar-bg: #000000;
+    --navbar-text: #ffffff;
+    --danger-color: #ff4444;
+    --danger-hover: #cc0000;
+    --stat-total-bg: rgba(33, 150, 243, 0.15);
+    --stat-voted-bg: rgba(76, 175, 80, 0.15);
+    --stat-nonvoted-bg: rgba(244, 67, 54, 0.15);
+}
+
+/* Apply theme to body */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Settings dropdown */
+.settings-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: var(--bg-primary);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    box-shadow: 0 2px 10px var(--shadow-color);
+    min-width: 280px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+/* Scrollbar styles */
+.settings-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.settings-dropdown::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.settings-dropdown::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 4px;
+}
+
+.settings-dropdown::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+.settings-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background-color: var(--bg-primary);
+    z-index: 1;
+}
+
+.settings-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.close-settings {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.close-settings:hover {
+    background-color: var(--hover-color);
+}
+
+.settings-section {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-option {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    color: var(--text-primary);
+    gap: 12px;
+}
+
+.settings-option:hover {
+    background-color: var(--hover-color);
+}
+
+.settings-option.active {
+    background-color: var(--accent-color);
+    color: var(--navbar-text);
+}
+
+.settings-chevron {
+    width: 12px;
+    transition: transform 0.2s ease;
+}
+
+.settings-subsection {
+    padding: 0.5rem 0;
+    background-color: var(--bg-secondary);
+}
+
+.settings-subsection .settings-option {
+    padding-left: 3rem;
+}
+
+/* Profile details */
+.profile-details {
+    padding: 0.75rem 1rem;
+}
+
+.profile-details p {
+    margin: 0.5rem 0;
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.profile-details p span:first-child {
+    color: var(--text-secondary);
+}
+
+/* Logout button */
+.logout-button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.logout-button:hover {
+    background-color: var(--danger-hover);
+}
+
+/* Stats styling */
+.stat-item.total {
+    background: var(--stat-total-bg);
+}
+
+.stat-item.voted {
+    background: var(--stat-voted-bg);
+}
+
+.stat-item.non-voted {
+    background: var(--stat-nonvoted-bg);
+}
