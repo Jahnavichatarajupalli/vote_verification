@@ -4,28 +4,36 @@ import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
 const Login = ({ onLogin }) => {
-    const [formData, setFormData] = useState({
-        username: '',
-        phoneNumber: ''
-    });
+    const [email, setEmail] = useState('');
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const { username, phoneNumber } = formData;
-
-    const onChange = e => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-        setError('');
-    };
-
-    const onSubmit = async e => {
+    const requestOTP = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
-            const res = await axios.post('/api/auth/login', formData);
+            await axios.post('/api/auth/request-otp', { email });
+            setOtpSent(true);
+        } catch (err) {
+            console.error('OTP request error:', err);
+            setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const verifyOTP = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+
+        try {
+            const res = await axios.post('/api/auth/verify-otp', { email, otp });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('officerData', JSON.stringify(res.data.officer));
 
@@ -33,8 +41,8 @@ const Login = ({ onLogin }) => {
             onLogin();
             navigate('/dashboard');
         } catch (err) {
-            console.error('Login error:', err);
-            setError(err.response?.data?.message || 'Login failed. Please try again.');
+            console.error('OTP verification error:', err);
+            setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
             localStorage.clear(); // Clear any partial data
         } finally {
             setLoading(false);
@@ -46,39 +54,57 @@ const Login = ({ onLogin }) => {
             <div className="login-box">
                 <h2>Login to Voter Verification System</h2>
                 {error && <div className="error-message">{error}</div>}
-                <form onSubmit={onSubmit}>
-                    <div className="form-group">
-                        <label>Username</label>
-                        <input
-                            type="text"
-                            name="username"
-                            value={username}
-                            onChange={onChange}
-                            placeholder="Enter username"
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Phone Number</label>
-                        <input
-                            type="tel"
-                            name="phoneNumber"
-                            value={phoneNumber}
-                            onChange={onChange}
-                            placeholder="Enter phone number"
-                            pattern="[0-9]{10}"
-                            title="Please enter a valid 10-digit phone number"
-                            required
-                        />
-                    </div>
-                    <button 
-                        type="submit" 
-                        className="login-button"
-                        disabled={loading}
-                    >
-                        {loading ? 'Logging in...' : 'Login'}
-                    </button>
-                </form>
+                
+                {!otpSent ? (
+                    <form onSubmit={requestOTP}>
+                        <div className="form-group">
+                            <label>Email Address</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Enter your email"
+                                required
+                            />
+                        </div>
+                        <button 
+                            type="submit" 
+                            className="login-button"
+                            disabled={loading}
+                        >
+                            {loading ? 'Sending OTP...' : 'Get OTP'}
+                        </button>
+                    </form>
+                ) : (
+                    <form onSubmit={verifyOTP}>
+                        <div className="form-group">
+                            <label>Enter OTP</label>
+                            <input
+                                type="text"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                placeholder="Enter 6-digit OTP"
+                                pattern="[0-9]{6}"
+                                maxLength="6"
+                                required
+                            />
+                        </div>
+                        <button 
+                            type="submit" 
+                            className="login-button"
+                            disabled={loading}
+                        >
+                            {loading ? 'Verifying...' : 'Verify OTP'}
+                        </button>
+                        <button 
+                            type="button" 
+                            className="resend-button"
+                            onClick={() => setOtpSent(false)}
+                        >
+                            Back to Email
+                        </button>
+                    </form>
+                )}
             </div>
         </div>
     );
