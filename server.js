@@ -71,14 +71,14 @@ const upload = multer({ storage, fileFilter: (req, file, cb) => {
 
 app.post('/api/admin/addOfficer', async (req, res) => {
     try {
-        const { name, phoneNumber, job, pollingStation, age, gender } = req.body;
-        if (!name || !phoneNumber || !job || !pollingStation || !age || !gender) {
+        const { name, email, job, pollingStation, age, gender } = req.body;
+        if (!name || !email || !job || !pollingStation || !age || !gender) {
             return res.status(400).json({ message: 'All fields are required' });
         }
-        if (await Officer.findOne({ phoneNumber })) {
+        if (await Officer.findOne({ email })) {
             return res.status(400).json({ message: 'Officer with this phone number already exists' });
         }
-        const officer = new Officer({ name, phoneNumber, job, pollingStation, age, gender });
+        const officer = new Officer({ name, email , job, pollingStation, age, gender });
         await officer.save();
         res.status(201).json({ message: 'Officer added successfully', officer });
     } catch (error) {
