@@ -6,6 +6,11 @@ import './Dashboard.css';
 import { loadFaceApiModels, createFaceMatcher, startVideo, stopVideo, verifyFace } from '../utils/faceVerification';
 import { validateEpicNumber } from '../utils/epicValidation';
 import { VoiceMessages } from '../utils/speechUtils';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+
+// Register the required Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Dashboard = ({ onLogout }) => {
     const navigate = useNavigate();
@@ -16,6 +21,8 @@ const Dashboard = ({ onLogout }) => {
     const [loading, setLoading] = useState(false);
     const [epicNo, setEpicNo] = useState('');
     const [faceVerificationStarted, setFaceVerificationStarted] = useState(false);
+    const [votingStats, setVotingStats] = useState(null);
+    const [statsLoading, setStatsLoading] = useState(false);
     const videoRef = useRef(null);
 
     useEffect(() => {
@@ -30,11 +37,33 @@ const Dashboard = ({ onLogout }) => {
             setError('Failed to load face verification system');
         });
 
+        // Fetch voting statistics
+        fetchVotingStatistics();
+
         // Cleanup function to stop video when component unmounts
         return () => {
             stopVideo();
         };
     }, [navigate]);
+
+    // Function to fetch voting statistics
+    const fetchVotingStatistics = async () => {
+        setStatsLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const response = await axios.get('/api/voters/statistics', {
+                headers: { 'x-auth-token': token }
+            });
+            
+            setVotingStats(response.data);
+        } catch (err) {
+            console.error('Error fetching voting statistics:', err);
+        } finally {
+            setStatsLoading(false);
+        }
+    };
 
     const verifyVoter = async (e) => {
         e.preventDefault();
@@ -151,8 +180,12 @@ const Dashboard = ({ onLogout }) => {
         if (videoRef.current && videoRef.current.srcObject) {
             stopVideo();
         }
-        // Refresh the page
-        window.location.reload();
+        
+        // Refresh voting statistics
+        fetchVotingStatistics();
+        
+        // Reset EPIC number
+        setEpicNo('');
     };
 
     const handleReset = () => {
@@ -171,11 +204,94 @@ const Dashboard = ({ onLogout }) => {
         navigate('/login');
     };
 
+    // Prepare data for the pie chart
+    const chartData = votingStats ? {
+        labels: ['Voted', 'Not Voted'],
+        datasets: [
+            {
+                data: [votingStats.voted, votingStats.nonVoted],
+                backgroundColor: ['#4CAF50', '#F44336'],
+                borderColor: ['#388E3C', '#D32F2F'],
+                borderWidth: 1,
+            },
+        ],
+    } : null;
+
+    // Chart options
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    font: {
+                        size: 14
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.raw || 0;
+                        const total = votingStats ? votingStats.total : 0;
+                        const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                        return `${label}: ${value} (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    };
+
     return (
         <div className="dashboard-container">
             <Navbar onLogout={handleLogout} />
             
             <div className="verification-container">
+                {/* Voting Statistics Section */}
+                <div className="voting-statistics-section">
+                    <h2>Voting Progress</h2>
+                    {statsLoading ? (
+                        <div className="loading-message">Loading statistics...</div>
+                    ) : votingStats ? (
+                        <div className="statistics-container">
+                            <div className="statistics-info">
+                                <div className="stat-item">
+                                    <span className="stat-label">Total Voters:</span>
+                                    <span className="stat-value">{votingStats.total}</span>
+                                </div>
+                                <div className="stat-item">
+                                    <span className="stat-label">Voted:</span>
+                                    <span className="stat-value">{votingStats.voted}</span>
+                                </div>
+                                <div className="stat-item">
+                                    <span className="stat-label">Not Voted:</span>
+                                    <span className="stat-value">{votingStats.nonVoted}</span>
+                                </div>
+                                <div className="stat-item">
+                                    <span className="stat-label">Polling Station:</span>
+                                    <span className="stat-value">{votingStats.pollingStation}</span>
+                                </div>
+                                <button 
+                                    className="refresh-button"
+                                    onClick={fetchVotingStatistics}
+                                    disabled={statsLoading}
+                                >
+                                    Refresh Statistics
+                                </button>
+                            </div>
+                            <div className="chart-container">
+                                {chartData && (
+                                    <Pie data={chartData} options={chartOptions} />
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="error-message">Failed to load voting statistics</div>
+                    )}
+                </div>
+
                 <div className="steps-indicator">
                     <div className={`step ${step === 'epic' ? 'active' : ''} ${step === 'face' || step === 'approved' ? 'completed' : ''}`}>
                         1. EPIC Number Verification
