@@ -44,16 +44,19 @@ router.post('/request-otp', async (req, res) => {
             return res.status(401).json({ message: 'Invalid email address' });
         }
 
-        // Generate and save OTP
+        // Delete old OTP (if exists) before creating a new one
+        await OTP.deleteMany({ email: email.toLowerCase() });
+
+        // Generate and save OTP with expiration
         const otp = generateOTP();
-        await OTP.create({ email: email.toLowerCase(), otp });
+        await OTP.create({ email: email.toLowerCase(), otp, createdAt: new Date() });
 
         // Send OTP via email
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'Login OTP for Voter Verification System',
-            text: `Your OTP for login is: ${otp}. This OTP will expire in 5 minutes.`
+            text: `Your OTP for login is: ${otp}. This OTP will expire in 1 minute.`
         };
 
         await transporter.sendMail(mailOptions);
@@ -71,13 +74,17 @@ router.post('/verify-otp', async (req, res) => {
         const { email, otp } = req.body;
 
         // Find and validate OTP
-        const otpRecord = await OTP.findOne({
-            email: email.toLowerCase(),
-            otp: otp
-        });
+        const otpRecord = await OTP.findOne({ email: email.toLowerCase(), otp: otp });
 
         if (!otpRecord) {
             return res.status(401).json({ message: 'Invalid or expired OTP' });
+        }
+
+        // Check OTP expiration manually (extra security)
+        const timeElapsed = (Date.now() - otpRecord.createdAt.getTime()) / 1000;
+        if (timeElapsed > 60) {
+            await OTP.deleteOne({ _id: otpRecord._id });
+            return res.status(401).json({ message: 'OTP expired. Please request a new one.' });
         }
 
         // Find officer

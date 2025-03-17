@@ -1,0 +1,156 @@
+.voting-statistics-section {
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    /* display: flex; */
+    width:850px;
+    margin-left:140px;
+}
+
+.voting-statistics-section h2 {
+    color: #2c3e50;
+    margin-bottom: 2rem;
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.statistics-container {
+    display: flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.statistics-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-item {
+    display: flex;
+    gap:10px;
+    align-items: center;
+    justify-content: flex-start;
+    font-size: 30px;
+    /* align-items: flex-start; */
+}
+
+
+.stat-label {
+    /* color: #6c757d; */
+    font-size: 0.9rem;
+    font-weight: 500;
+    color:black;
+}
+
+.stat-value {
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Color indicators for different stats */
+.stat-item:nth-child(1) .stat-value {
+    color: #2196F3;  /* Total - Blue */
+}
+
+.stat-item:nth-child(2) .stat-value {
+    color: #4CAF50;  /* Voted - Green */
+}
+
+.stat-item:nth-child(3) .stat-value {
+    color: #F44336;  /* Not Voted - Red */
+}
+
+.stat-item:nth-child(4) .stat-value {
+    color: #673AB7;  /* Polling Station - Purple */
+}
+
+.chart-container {
+    flex: 1;
+    min-height: 300px;
+    padding: 1.5rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.refresh-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0 auto;
+}
+
+.refresh-button:disabled {
+    background: #9E9E9E;
+    cursor: not-allowed;
+}
+
+.refresh-button i {
+    font-size: 1rem;
+}
+
+.loading-message,
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.error-message {
+    color: #dc3545;
+}
+
+@media (max-width: 768px) {
+    .statistics-container {
+        flex-direction: column;
+    }
+
+    .statistics-info {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        min-height: 250px;
+    }
+}
+
+/* Add loading animation for the refresh icon */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.refresh-button:disabled i {
+    animation: spin 1s linear infinite;
+}
+
+/* Add smooth fade-in animation for the entire section */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.voting-statistics-section {
+    animation: fadeIn 0.5s ease-out;
+} 
