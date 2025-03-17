@@ -159,7 +159,7 @@ const Navbar = ({ onLogout }) => {
         <>
             <nav className="navbar">
                 <div className="navbar-brand">
-                    <h1>Voter Verification System</h1>
+                    <h1>VoteAI</h1>
                 </div>
                
                 <div className="navbar-stats">
