@@ -14,6 +14,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+
     margin-bottom: 20px;
     padding: 10px 15px;
     background: white;
@@ -24,6 +25,7 @@
     z-index: 1000;
     width: 70rem;
     margin-left: 20px;
+
 }
 
 .voter-list-header h2 {
@@ -36,6 +38,8 @@
 .search-container {
     flex: 1;
     margin: 0 20px;
+
+    
 }
 
 .search-input {
@@ -44,6 +48,7 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
+    
 }
 
 /* Grid Layout for Voter Cards */

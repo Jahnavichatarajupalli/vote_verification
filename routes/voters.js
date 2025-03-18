@@ -118,6 +118,9 @@ router.post('/verify', verifyToken, async (req, res) => {
         console.log('Encrypted EPIC number:', encryptedEpicNo);
         console.log('Encrypted polling station:', encryptedPollingStation);
 
+
+
+
         // First, try to find the voter by EPIC number only
         const voterByEpic = await Voter.findOne({ epicNo: encryptedEpicNo });
         console.log('Voter found by EPIC only:', voterByEpic ? 'Yes' : 'No');
@@ -126,6 +129,7 @@ router.post('/verify', verifyToken, async (req, res) => {
             console.log('Voter polling station:', decrypt(voterByEpic.pollingStation));
             console.log('Expected polling station:', req.officer.pollingStation);
         }
+
 
         // Find voter with both EPIC and polling station
         const voter = await Voter.findOne({ 
@@ -169,11 +173,13 @@ router.post('/mark-voted', verifyToken, async (req, res) => {
             return res.status(400).json({ message: 'EPIC number is required' });
         }
 
+
         // Encrypt the EPIC number for comparison
         const encryptedEpicNo = encrypt(epicNo);
         
         const voter = await Voter.findOne({ epicNo: encryptedEpicNo });
         
+
         if (!voter) {
             return res.status(404).json({ message: 'Voter not found' });
         }
@@ -181,9 +187,17 @@ router.post('/mark-voted', verifyToken, async (req, res) => {
         voter.voted = true;  // Changed from hasVoted to voted to match schema
         await voter.save();
 
+
+        // Decrypt voter data for response
+        const decryptedVoter = decryptVoterData(voter);
+        if (!decryptedVoter) {
+            return res.status(500).json({ message: 'Error decrypting voter data' });
+        }
+
         res.json({ message: 'Voter status updated successfully' });
     } catch (err) {
         console.error('Error marking voter as voted:', err);
+
         res.status(500).json({ message: 'Server error' });
     }
 });

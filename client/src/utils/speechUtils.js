@@ -22,6 +22,7 @@ export const speak = (message) => {
     return new Promise((resolve) => {
         if (!message) return resolve();
 
+
         // Cancel any ongoing speech
         synth.cancel();
 
@@ -45,6 +46,7 @@ export const speak = (message) => {
         synth.speak(utterance);
     });
 };
+
 
 // Function to stop speaking
 export const stopSpeaking = () => {
