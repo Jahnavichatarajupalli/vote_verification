@@ -15,10 +15,15 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    padding: 1rem;
+    padding: 10px 15px;
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 130px;
+    z-index: 1000;
+    width: 70rem;
+    margin-left: 20px;
 }
 
 .voter-list-header h2 {
@@ -47,6 +52,7 @@
     grid-template-columns: repeat(2, 1fr); /* Two columns */
     gap: 20px;
     padding: 20px;
+    margin-top: 50px;
 }
 
 .voter-card {
