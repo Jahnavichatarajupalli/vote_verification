@@ -9,20 +9,12 @@ synth.onvoiceschanged = () => {
     voices = synth.getVoices();
 };
 
-// Function to get the best female English voice
-const getFemaleVoice = () => {
-    if (voices.length === 0) {
-        voices = synth.getVoices();
-    }
-    
-    // Try to find a female English voice
-    const femaleVoice = voices.find(voice => 
-        voice.lang.startsWith('en') && 
-        voice.name.toLowerCase().includes('female')
-    );
-    
-    // Fallback to any English voice if no female voice is found
-    return femaleVoice || voices.find(voice => voice.lang.startsWith('en')) || voices[0];
+// Function to get the best voice
+const getVoice = () => {
+    const availableVoices = synth.getVoices();
+    return availableVoices.find(voice => voice.lang === 'en-US') || 
+           availableVoices.find(voice => voice.lang.startsWith('en')) || 
+           availableVoices[0];
 };
 
 // Function to speak a message
@@ -30,23 +22,32 @@ export const speak = (message) => {
     return new Promise((resolve) => {
         if (!message) return resolve();
 
+
         // Cancel any ongoing speech
         synth.cancel();
 
-    // Create a new utterance
-    const utterance = new SpeechSynthesisUtterance(message);
-    
-    // Set properties for the voice
-    utterance.rate = 1.0;  // Normal speed
-    utterance.pitch = 1.0; // Normal pitch
-    utterance.volume = 1.0; // Full volume
-    
-    // Set female voice
-    utterance.voice = getFemaleVoice();
+        const utterance = new SpeechSynthesisUtterance(message);
+        
+        // Configure speech properties
+        utterance.volume = 1;
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        utterance.voice = getVoice();
+        utterance.lang = 'en-US';
 
-    // Speak the message
-    synth.speak(utterance);
-})}
+        // Event handlers
+        utterance.onend = () => resolve();
+        utterance.onerror = (event) => {
+            console.error('Speech Error:', event);
+            resolve();
+        };
+
+        // Force speak
+        synth.speak(utterance);
+    });
+};
+
+
 // Function to stop speaking
 export const stopSpeaking = () => {
     synth.cancel();

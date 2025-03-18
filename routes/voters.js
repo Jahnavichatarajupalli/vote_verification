@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const router = express.Router();
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');  // Keep existing import
 const Voter = require('../models/Voter');
 const { encrypt, decrypt } = require('../config/db');
 const cors = require('cors');
@@ -118,6 +118,9 @@ router.post('/verify', verifyToken, async (req, res) => {
         console.log('Encrypted EPIC number:', encryptedEpicNo);
         console.log('Encrypted polling station:', encryptedPollingStation);
 
+
+
+
         // First, try to find the voter by EPIC number only
         const voterByEpic = await Voter.findOne({ epicNo: encryptedEpicNo });
         console.log('Voter found by EPIC only:', voterByEpic ? 'Yes' : 'No');
@@ -126,6 +129,7 @@ router.post('/verify', verifyToken, async (req, res) => {
             console.log('Voter polling station:', decrypt(voterByEpic.pollingStation));
             console.log('Expected polling station:', req.officer.pollingStation);
         }
+
 
         // Find voter with both EPIC and polling station
         const voter = await Voter.findOne({ 
@@ -163,24 +167,26 @@ router.post('/verify', verifyToken, async (req, res) => {
 // @access  Private
 router.post('/mark-voted', verifyToken, async (req, res) => {
     try {
-        const { voterId } = req.body;
-
-        if (!voterId) {
-            return res.status(400).json({ message: 'Voter ID is required' });
+        const { epicNo } = req.body;
+        
+        if (!epicNo) {
+            return res.status(400).json({ message: 'EPIC number is required' });
         }
 
-        const voter = await Voter.findById(voterId);
+
+        // Encrypt the EPIC number for comparison
+        const encryptedEpicNo = encrypt(epicNo);
+        
+        const voter = await Voter.findOne({ epicNo: encryptedEpicNo });
+        
+
         if (!voter) {
             return res.status(404).json({ message: 'Voter not found' });
         }
 
-        if (voter.voted) {
-            return res.status(400).json({ message: 'Voter has already cast their vote' });
-        }
-
-        // Update voter status
-        voter.voted = true;
+        voter.voted = true;  // Changed from hasVoted to voted to match schema
         await voter.save();
+
 
         // Decrypt voter data for response
         const decryptedVoter = decryptVoterData(voter);
@@ -188,12 +194,10 @@ router.post('/mark-voted', verifyToken, async (req, res) => {
             return res.status(500).json({ message: 'Error decrypting voter data' });
         }
 
-        res.json({ 
-            message: 'Vote recorded successfully',
-            voter: decryptedVoter
-        });
-    } catch (error) {
-        console.error('Mark voted error:', error);
+        res.json({ message: 'Voter status updated successfully' });
+    } catch (err) {
+        console.error('Error marking voter as voted:', err);
+
         res.status(500).json({ message: 'Server error' });
     }
 });
