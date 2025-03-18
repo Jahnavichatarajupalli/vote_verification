@@ -1,51 +1,49 @@
 // Utility functions for text-to-speech functionality
 
 const synth = window.speechSynthesis;
-
-// Initialize voices
 let voices = [];
 
-// Load voices when they're available
-if (synth.onvoiceschanged !== undefined) {
-    synth.onvoiceschanged = () => {
-        voices = synth.getVoices();
-    };
-}
+// Initialize voices immediately and set up change listener
+voices = synth.getVoices();
+synth.onvoiceschanged = () => {
+    voices = synth.getVoices();
+};
 
-// Function to get the best female English voice
-const getFemaleVoice = () => {
-    if (voices.length === 0) {
-        voices = synth.getVoices();
-    }
-    
-    // Try to find a female English voice
-    const femaleVoice = voices.find(voice => 
-        voice.lang.startsWith('en') && 
-        voice.name.toLowerCase().includes('female')
-    );
-    
-    // Fallback to any English voice if no female voice is found
-    return femaleVoice || voices.find(voice => voice.lang.startsWith('en')) || voices[0];
+// Function to get the best voice
+const getVoice = () => {
+    const availableVoices = synth.getVoices();
+    return availableVoices.find(voice => voice.lang === 'en-US') || 
+           availableVoices.find(voice => voice.lang.startsWith('en')) || 
+           availableVoices[0];
 };
 
 // Function to speak a message
 export const speak = (message) => {
-    // Cancel any ongoing speech
-    synth.cancel();
+    return new Promise((resolve) => {
+        if (!message) return resolve();
 
-    // Create a new utterance
-    const utterance = new SpeechSynthesisUtterance(message);
-    
-    // Set properties for the voice
-    utterance.rate = 1.0;  // Normal speed
-    utterance.pitch = 1.0; // Normal pitch
-    utterance.volume = 1.0; // Full volume
-    
-    // Set female voice
-    utterance.voice = getFemaleVoice();
+        // Cancel any ongoing speech
+        synth.cancel();
 
-    // Speak the message
-    synth.speak(utterance);
+        const utterance = new SpeechSynthesisUtterance(message);
+        
+        // Configure speech properties
+        utterance.volume = 1;
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        utterance.voice = getVoice();
+        utterance.lang = 'en-US';
+
+        // Event handlers
+        utterance.onend = () => resolve();
+        utterance.onerror = (event) => {
+            console.error('Speech Error:', event);
+            resolve();
+        };
+
+        // Force speak
+        synth.speak(utterance);
+    });
 };
 
 // Function to stop speaking
@@ -53,12 +51,20 @@ export const stopSpeaking = () => {
     synth.cancel();
 };
 
-// Predefined voice messages
+// Predefined voice messages with forced speak
 export const VoiceMessages = {
-    // EPIC number related messages
-    epicNotFound: () => speak("EPIC number not found in the database."),
-    wrongPollingStation: () => speak("Voter does not belong to this polling station."),
-    duplicateVote: () => speak("Voter has already cast their vote."),
+    epicNotFound: () => {
+        synth.cancel();
+        speak("EPIC NUMBER not found.");
+    },
+    wrongPollingStation: () => {
+        synth.cancel();
+        speak("Voter does not belong to this polling station.");
+    },
+    duplicateVote: () => {
+        synth.cancel();
+        speak("Voter has already cast their vote.");
+    },
     invalidEpicFormat: () => speak("EPIC number is not in the required format."),
     
     // Face verification messages
