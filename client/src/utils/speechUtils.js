@@ -46,8 +46,7 @@ export const speak = (message) => {
 
     // Speak the message
     synth.speak(utterance);
-};
-
+})}
 // Function to stop speaking
 export const stopSpeaking = () => {
     synth.cancel();
