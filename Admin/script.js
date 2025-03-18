@@ -96,12 +96,15 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Officer data:', officerData);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/addOfficer`, {
+            const response = await fetch('http://localhost:5000/api/admin/addOfficer', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                body: JSON.stringify(officerData)
+                body: JSON.stringify(officerData),
+                mode: 'cors',
+                credentials: 'include'
             });
 
             console.log('Response status:', response.status);
