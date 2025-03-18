@@ -55,6 +55,7 @@
     grid-template-columns: repeat(2, 1fr); /* Two columns */
     gap: 20px;
     padding: 20px;
+    margin-top: 50px;
 }
 
 .voter-card {
