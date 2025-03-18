@@ -18,14 +18,29 @@ const getFemaleVoice = () => {
         voices = synth.getVoices();
     }
     
-    // Try to find a female English voice
+    // Try to find a female English voice with specific criteria
     const femaleVoice = voices.find(voice => 
         voice.lang.startsWith('en') && 
-        voice.name.toLowerCase().includes('female')
+        (
+            voice.name.toLowerCase().includes('female') ||
+            voice.name.toLowerCase().includes('woman') ||
+            voice.name.toLowerCase().includes('girl') ||
+            voice.name.toLowerCase().includes('female-') ||
+            voice.name.toLowerCase().includes('female_')
+        )
     );
     
-    // Fallback to any English voice if no female voice is found
-    return femaleVoice || voices.find(voice => voice.lang.startsWith('en')) || voices[0];
+    // If no female voice found, try to find any English voice
+    if (!femaleVoice) {
+        const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
+        if (englishVoice) {
+            // Adjust pitch to make it sound more feminine
+            return englishVoice;
+        }
+    }
+    
+    // Fallback to any available voice
+    return femaleVoice || voices[0];
 };
 
 // Function to speak a message
@@ -38,7 +53,7 @@ export const speak = (message) => {
     
     // Set properties for the voice
     utterance.rate = 1.0;  // Normal speed
-    utterance.pitch = 1.0; // Normal pitch
+    utterance.pitch = 1.2; // Slightly higher pitch for more feminine sound
     utterance.volume = 1.0; // Full volume
     
     // Set female voice
