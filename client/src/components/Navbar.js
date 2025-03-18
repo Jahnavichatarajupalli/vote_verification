@@ -5,7 +5,7 @@ import './Navbar.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 
-const Navbar = ({ onLogout }) => {
+const Navbar = ({ onLogout, children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [stats, setStats] = useState(null);
@@ -159,9 +159,8 @@ const Navbar = ({ onLogout }) => {
         <>
             <nav className="navbar">
                 <div className="navbar-brand">
-                    <h1>Voter Verification System</h1>
+                    <h1>VoteAI</h1>
                 </div>
-               
                 <div className="navbar-stats">
                     {error ? (
                         <span className="error">{error}</span>
@@ -169,51 +168,49 @@ const Navbar = ({ onLogout }) => {
                         <span>Loading statistics...</span>
                     ) : stats ? (
                         <>
-                            <div className="stat-item">
-                                <span className="stat-label">Polling Station:</span>
-                                <span className="stat-value">{stats.pollingStation}</span>
+                            <div className="state-item">
+                                <span className="stats-label colors">Polling Station:</span>
+                                <span className="stat-value color">{stats.pollingStation}</span>
                             </div>
                             <div 
-                                className={`stat-item total ${location.pathname === '/voters/all' ? 'active' : ''}`} 
+                                className={`stats-item total ${location.pathname === '/voters/all' ? 'active' : ''}`} 
                                 onClick={() => handleStatClick('all')}
                             >
-                                <span className="stat-label">Total Voters:</span>
-                                <span className="stat-value">{stats.total}</span>
+                                <span className="stats-label">Total Voters</span>
+                                {/* <span className="stat-value">{stats.total}</span> */}
                             </div>
                             <div 
-                                className={`stat-item voted ${location.pathname === '/voters/voted' ? 'active' : ''}`} 
+                                className={`stats-item voted ${location.pathname === '/voters/voted' ? 'active' : ''}`} 
                                 onClick={() => handleStatClick('voted')}
                             >
-                                <span className="stat-label">Voted:</span>
-                                <span className="stat-value">{stats.voted}</span>
+                                <span className="stats-label">Voted</span>
+                                {/* <span className="stat-value">{stats.voted}</span> */}
                             </div>
                             <div 
-                                className={`stat-item non-voted ${location.pathname === '/voters/yet-to-vote' ? 'active' : ''}`} 
+                                className={`stats-item non-voted ${location.pathname === '/voters/yet-to-vote' ? 'active' : ''}`} 
                                 onClick={() => handleStatClick('yet-to-vote')}
                             >
-                                <span className="stat-label">Yet to Vote:</span>
-                                <span className="stat-value">{stats.nonVoted}</span>
+                                <span className="stats-label">Yet to Vote</span>
+                                {/* <span className="stat-value">{stats.nonVoted}</span> */}
                             </div>
                         </>
                     ) : (
                         <span>Loading statistics...</span>
                     )}
                 </div>
+                {children}
+
                 <div className="navbar-links">
-                   
                    <div className="profile-container">
                     <div className="profile">
-
                        <button 
                            className="profile-icon" 
                            onClick={() => setShowProfile(!showProfile)}
                        >
                            <i className="fas fa-user-circle"></i>
+                            </button>
                            
-                       </button>
-                       <p>Profile</p>
                        </div>
-                   
                        {showProfile && officerDetails && (
                            <div className="profile-dropdown">
                                <div className="profile-header">
@@ -226,18 +223,18 @@ const Navbar = ({ onLogout }) => {
                                    </button>
                                </div>
                                <div className="profile-details">
-                               {/* <p>Name: {officerDetails.name}</p> */}
-                                   <p>Job: {officerDetails.job}</p>
-                                   <p>Phone: {officerDetails.phoneNumber}</p>
-                                   <p>Station: {officerDetails.pollingStation}</p>
-                                   <p>Age: {officerDetails.age}</p>
-                                   <p>Gender: {officerDetails.gender}</p>
+                                    <p><strong>Job: </strong>{officerDetails.job}</p>
+                                    <p><strong>Email: </strong>{officerDetails.email}</p>
+                                    <p><strong>Station: </strong>{officerDetails.pollingStation}</p>
+                                    <p><strong>Age: </strong>{officerDetails.age}</p>
+                                    <p><strong>Gender: </strong>{officerDetails.gender}</p>
                                </div>
                            </div>
                        )}
                    </div>
+                </div>
+            
                   
-               </div>
                <button onClick={handleLogout} className="logout-button">
                                    Logout
                                </button>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from './Navbar';
+import VotingChart from './Chart';
 import './Dashboard.css';
 import { loadFaceApiModels, createFaceMatcher, startVideo, stopVideo, verifyFace } from '../utils/faceVerification';
 import { validateEpicNumber } from '../utils/epicValidation';
@@ -16,6 +17,7 @@ const Dashboard = ({ onLogout }) => {
     const [loading, setLoading] = useState(false);
     const [epicNo, setEpicNo] = useState('');
     const [faceVerificationStarted, setFaceVerificationStarted] = useState(false);
+    const [showChart, setShowChart] = useState(false);
     const videoRef = useRef(null);
 
     useEffect(() => {
@@ -58,6 +60,7 @@ const Dashboard = ({ onLogout }) => {
                 { headers: { 'x-auth-token': token } }
             );
             setVoterData(res.data.voter);
+            console.log(res.data.voter)
             setLoading(false);
             setStep('face');
             VoiceMessages.success('EPIC number verified successfully');
@@ -67,7 +70,6 @@ const Dashboard = ({ onLogout }) => {
             setVoterData(null);
             setLoading(false);
             
-            // Handle specific error cases with voice feedback
             if (errorMessage.includes('not found')) {
                 VoiceMessages.epicNotFound();
             } else if (errorMessage.includes('polling station')) {
@@ -110,11 +112,11 @@ const Dashboard = ({ onLogout }) => {
                 stopVideo();
                 setFaceVerificationStarted(false);
                 
-                // Update voter status
+                // Update voter status using epicNo instead of _id
                 try {
                     const token = localStorage.getItem('token');
                     await axios.post('/api/voters/mark-voted', 
-                        { voterId: voterData.id },
+                        { epicNo: voterData.epicNo },  // Use epicNo for identification
                         { headers: { 'x-auth-token': token } }
                     );
                     
@@ -151,8 +153,9 @@ const Dashboard = ({ onLogout }) => {
         if (videoRef.current && videoRef.current.srcObject) {
             stopVideo();
         }
-        // Refresh the page
-        window.location.reload();
+        
+        // Reset EPIC number
+        setEpicNo('');
     };
 
     const handleReset = () => {
@@ -171,11 +174,32 @@ const Dashboard = ({ onLogout }) => {
         navigate('/login');
     };
 
+    const toggleChart = () => {
+        setShowChart(!showChart);
+    };
+
     return (
         <div className="dashboard-container">
-            <Navbar onLogout={handleLogout} />
+            <Navbar onLogout={handleLogout}>
+                <button 
+                    onClick={toggleChart}
+                    className="chart-toggle-button"
+                >
+                    {showChart ? 'Hide Progress' : 'Show Progress'}
+                </button>
+            </Navbar>
             
-            <div className="verification-container">
+            <div className="dashboard-content">
+                {/* Chart Section */}
+                {showChart && (
+                    <div className="chart-section">
+                        <VotingChart />
+                        </div>
+                    )}
+
+                {/* Main Verification Section - This will only show when chart is hidden */}
+                {!showChart && (
+                    <div className="verification-container">
                 <div className="steps-indicator">
                     <div className={`step ${step === 'epic' ? 'active' : ''} ${step === 'face' || step === 'approved' ? 'completed' : ''}`}>
                         1. EPIC Number Verification
@@ -271,7 +295,7 @@ const Dashboard = ({ onLogout }) => {
                     <div className="verification-step">
                         <h2>Step 3: Approval</h2>
                         <div className="approval-message">
-                            <p> {success}</p>
+                                    <p>{success}</p>
                             <p>The voter can now proceed to cast their vote.</p>
                         </div>
                         <button 
@@ -280,11 +304,14 @@ const Dashboard = ({ onLogout }) => {
                         >
                             Verify Next Voter
                         </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
         </div>
     );
+    
 };
 
 export default Dashboard;

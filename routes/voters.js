@@ -1,11 +1,34 @@
 const express = require('express');
-const app=express()
+const app = express();
 const router = express.Router();
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');  // Keep existing import
 const Voter = require('../models/Voter');
-const cors=require('cors')
-app.use(cors())
+const { encrypt, decrypt } = require('../config/db');
+const cors = require('cors');
+app.use(cors());
 
+// Function to decrypt voter data
+const decryptVoterData = (voter) => {
+    if (!voter) return null;
+    try {
+        return {
+            _id: voter._id,
+            name: decrypt(voter.name),
+            epicNo: decrypt(voter.epicNo),
+            age: voter.age,
+            gender: decrypt(voter.gender),
+            address: decrypt(voter.address),
+            pollingStation: decrypt(voter.pollingStation),
+            photo: voter.photo,
+            voted: voter.voted,
+            createdAt: voter.createdAt,
+            updatedAt: voter.updatedAt
+        };
+    } catch (error) {
+        console.error('Error decrypting voter:', error);
+        return null;
+    }
+};
 
 // @route   GET /api/voters/statistics
 // @desc    Get voter statistics for polling station
@@ -47,11 +70,10 @@ router.get('/statistics', verifyToken, async (req, res) => {
 router.get('/list/:status', verifyToken, async (req, res) => {
     try {
         const { status } = req.params;
-        const pollingStation = req.officer.pollingStation;
+        const pollingStation = encrypt(req.officer.pollingStation);
         
         let query = { pollingStation };
         
-        // Add hasVoted condition based on status
         if (status === 'voted') {
             query.voted = true;
         } else if (status === 'non-voted') {
@@ -59,11 +81,12 @@ router.get('/list/:status', verifyToken, async (req, res) => {
         }
         
         const voters = await Voter.find(query)
-            .select('name epicNo age address pollingStation hasVoted')
+            .select('name epicNo age address pollingStation voted')
             .sort('name');
-            console.log(voters)
-        
-        res.json(voters);
+
+        // Decrypt voters data
+        const decryptedVoters = voters.map(voter => decryptVoterData(voter)).filter(Boolean);
+        res.json(decryptedVoters);
     } catch (error) {
         console.error('Error fetching voters list:', error);
         res.status(500).json({ message: 'Error fetching voters list' });
@@ -75,85 +98,92 @@ router.get('/list/:status', verifyToken, async (req, res) => {
 // @access  Private
 router.post('/verify', verifyToken, async (req, res) => {
     try {
-        const {epicNo } = req.body;
-        const pollingStation = req.officer.pollingStation;
+        const { epicNo } = req.body;
+        
+        console.log('Verifying voter with EPIC number:', epicNo);
+        console.log('Officer polling station:', req.officer.pollingStation);
+        
+        if (!epicNo) {
+            return res.status(400).json({ message: 'EPIC number is required' });
+        }
 
-        console.log("🔍 Received EPIC No:", epicNo);
-        console.log("🔍 Officer's Polling Station:", pollingStation);
-
-        if (!pollingStation) {
+        if (!req.officer.pollingStation) {
             return res.status(403).json({ message: 'Polling station not found in token' });
         }
 
-        // Log voters with the same epicNo to check if pollingStation is the issue
-        const voterWithoutPollingCheck = await Voter.findOne({epicNo});
-        // console.log("🔍 Voter found (without pollingStation check):", voterWithoutPollingCheck);
+        // Encrypt search parameters
+        const encryptedEpicNo = encrypt(epicNo);
+        const encryptedPollingStation = encrypt(req.officer.pollingStation);
+        
+        console.log('Encrypted EPIC number:', encryptedEpicNo);
+        console.log('Encrypted polling station:', encryptedPollingStation);
 
-        // Now apply pollingStation filter
-        const voter = await Voter.findOne({ epicNo, pollingStation });
-        // console.log("✅ Voter found (with pollingStation check):", voter);
+        // First, try to find the voter by EPIC number only
+        const voterByEpic = await Voter.findOne({ epicNo: encryptedEpicNo });
+        console.log('Voter found by EPIC only:', voterByEpic ? 'Yes' : 'No');
+        
+        if (voterByEpic) {
+            console.log('Voter polling station:', decrypt(voterByEpic.pollingStation));
+            console.log('Expected polling station:', req.officer.pollingStation);
+        }
+
+        // Find voter with both EPIC and polling station
+        const voter = await Voter.findOne({ 
+            epicNo: encryptedEpicNo,
+            pollingStation: encryptedPollingStation
+        });
 
         if (!voter) {
+            console.log('Voter not found with matching polling station');
             return res.status(404).json({ message: 'Voter not found in this polling station' });
         }
 
         if (voter.voted) {
+            console.log('Voter has already voted');
             return res.status(400).json({ message: 'Voter has already cast their vote' });
         }
 
-        res.json({
-            voter: {
-                id: voter._id,
-                name: voter.name,
-                epicNo: voter.epicNo,
-                age: voter.age,
-                gender: voter.gender,
-                address: voter.address,
-                pollingStation: voter.pollingStation,
-                photo: voter.photo,
-                voted: voter.voted
-            }
-        });
+        // Decrypt voter data for response
+        const decryptedVoter = decryptVoterData(voter);
+        if (!decryptedVoter) {
+            console.log('Error decrypting voter data');
+            return res.status(500).json({ message: 'Error decrypting voter data' });
+        }
 
+        console.log('Voter verified successfully');
+        res.json({ voter: decryptedVoter });
     } catch (error) {
-        console.error('❌ Voter verification error:', error);
+        console.error('Voter verification error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
-
 
 // @route   POST /api/voters/mark-voted
 // @desc    Mark a voter as having voted
 // @access  Private
 router.post('/mark-voted', verifyToken, async (req, res) => {
     try {
-        const { voterId } = req.body;
+        const { epicNo } = req.body;
+        
+        if (!epicNo) {
+            return res.status(400).json({ message: 'EPIC number is required' });
+        }
 
-        const voter = await Voter.findById(voterId);
+        // Encrypt the EPIC number for comparison
+        const encryptedEpicNo = encrypt(epicNo);
+        
+        const voter = await Voter.findOne({ epicNo: encryptedEpicNo });
+        
         if (!voter) {
             return res.status(404).json({ message: 'Voter not found' });
         }
 
-        if (voter.voted) {
-            return res.status(400).json({ message: 'Voter has already cast their vote' });
-        }
-
-        // Update voter status
-        voter.voted = true;
+        voter.voted = true;  // Changed from hasVoted to voted to match schema
         await voter.save();
 
-        res.json({ 
-            message: 'Vote recorded successfully',
-            voter: {
-                id: voter._id,
-                name: voter.name,
-                epicNo: voter.epicNo,
-                voted: voter.voted
-            }
-        });
-
-    } catch (error) {
-        console.error('Mark voted error:', error);
+        res.json({ message: 'Voter status updated successfully' });
+    } catch (err) {
+        console.error('Error marking voter as voted:', err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -161,36 +191,171 @@ router.post('/mark-voted', verifyToken, async (req, res) => {
 // Get all voters
 router.get('/all', verifyToken, async (req, res) => {
     try {
-        const pollingStation = req.officer.pollingStation;
-        const voters = await Voter.find({pollingStation });
-        res.json({ voters });
+        console.log('Fetching all voters for polling station:', req.officer.pollingStation);
+        
+        if (!req.officer.pollingStation) {
+            return res.status(400).json({ message: 'Polling station not found in token' });
+        }
+
+        // Get all voters first
+        const allVoters = await Voter.find({});
+        console.log('Total voters in database:', allVoters.length);
+
+        // Filter voters by matching decrypted polling station
+        const matchingVoters = allVoters.filter(voter => {
+            try {
+                const decryptedStation = decrypt(voter.pollingStation);
+                return decryptedStation === req.officer.pollingStation;
+            } catch (err) {
+                console.error('Error decrypting polling station:', err);
+                return false;
+            }
+        });
+        console.log('Matching voters found:', matchingVoters.length);
+
+        // Decrypt each voter's data
+        const decryptedVoters = matchingVoters.map(voter => {
+            try {
+                return {
+                    _id: voter._id,
+                    name: decrypt(voter.name),
+                    epicNo: decrypt(voter.epicNo),
+                    age: voter.age,
+                    gender: decrypt(voter.gender),
+                    address: decrypt(voter.address),
+                    pollingStation: decrypt(voter.pollingStation),
+                    photo: voter.photo,
+                    voted: voter.voted
+                };
+            } catch (err) {
+                console.error('Error decrypting voter data:', err);
+                return null;
+            }
+        }).filter(Boolean);
+
+        console.log('Successfully decrypted voters:', decryptedVoters.length);
+
+        res.json({ 
+            voters: decryptedVoters,
+            total: decryptedVoters.length
+        });
     } catch (error) {
         console.error('Error fetching all voters:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Error fetching voters list' });
     }
 });
 
 // Get voted voters
 router.get('/voted', verifyToken, async (req, res) => {
     try {
-        const pollingStation = req.officer.pollingStation;
-        const voters = await Voter.find({ pollingStation ,voted: true });
-        res.json({ voters });
+        console.log('Fetching voted voters for polling station:', req.officer.pollingStation);
+        
+        if (!req.officer.pollingStation) {
+            return res.status(400).json({ message: 'Polling station not found in token' });
+        }
+
+        // Get all voted voters first
+        const allVoters = await Voter.find({ voted: true });
+        console.log('Total voted voters in database:', allVoters.length);
+
+        // Filter voters by matching decrypted polling station
+        const matchingVoters = allVoters.filter(voter => {
+            try {
+                const decryptedStation = decrypt(voter.pollingStation);
+                return decryptedStation === req.officer.pollingStation;
+            } catch (err) {
+                console.error('Error decrypting polling station:', err);
+                return false;
+            }
+        });
+        console.log('Matching voted voters found:', matchingVoters.length);
+
+        // Decrypt each voter's data
+        const decryptedVoters = matchingVoters.map(voter => {
+            try {
+                return {
+                    _id: voter._id,
+                    name: decrypt(voter.name),
+                    epicNo: decrypt(voter.epicNo),
+                    age: voter.age,
+                    gender: decrypt(voter.gender),
+                    address: decrypt(voter.address),
+                    pollingStation: decrypt(voter.pollingStation),
+                    photo: voter.photo,
+                    voted: voter.voted
+                };
+            } catch (err) {
+                console.error('Error decrypting voter data:', err);
+                return null;
+            }
+        }).filter(Boolean);
+
+        console.log('Successfully decrypted voted voters:', decryptedVoters.length);
+
+        res.json({ 
+            voters: decryptedVoters,
+            total: decryptedVoters.length
+        });
     } catch (error) {
         console.error('Error fetching voted voters:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Error fetching voters list' });
     }
 });
 
 // Get yet to vote voters
 router.get('/yet-to-vote', verifyToken, async (req, res) => {
     try {
-        const pollingStation = req.officer.pollingStation;
-        const voters = await Voter.find({pollingStation, voted: false });
-        res.json({ voters });
+        console.log('Fetching yet to vote voters for polling station:', req.officer.pollingStation);
+        
+        if (!req.officer.pollingStation) {
+            return res.status(400).json({ message: 'Polling station not found in token' });
+        }
+
+        // Get all non-voted voters first
+        const allVoters = await Voter.find({ voted: false });
+        console.log('Total non-voted voters in database:', allVoters.length);
+
+        // Filter voters by matching decrypted polling station
+        const matchingVoters = allVoters.filter(voter => {
+            try {
+                const decryptedStation = decrypt(voter.pollingStation);
+                return decryptedStation === req.officer.pollingStation;
+            } catch (err) {
+                console.error('Error decrypting polling station:', err);
+                return false;
+            }
+        });
+        console.log('Matching non-voted voters found:', matchingVoters.length);
+
+        // Decrypt each voter's data
+        const decryptedVoters = matchingVoters.map(voter => {
+            try {
+                return {
+                    _id: voter._id,
+                    name: decrypt(voter.name),
+                    epicNo: decrypt(voter.epicNo),
+                    age: voter.age,
+                    gender: decrypt(voter.gender),
+                    address: decrypt(voter.address),
+                    pollingStation: decrypt(voter.pollingStation),
+                    photo: voter.photo,
+                    voted: voter.voted
+                };
+            } catch (err) {
+                console.error('Error decrypting voter data:', err);
+                return null;
+            }
+        }).filter(Boolean);
+
+        console.log('Successfully decrypted non-voted voters:', decryptedVoters.length);
+
+        res.json({ 
+            voters: decryptedVoters,
+            total: decryptedVoters.length
+        });
     } catch (error) {
         console.error('Error fetching yet to vote voters:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Error fetching voters list' });
     }
 });
 

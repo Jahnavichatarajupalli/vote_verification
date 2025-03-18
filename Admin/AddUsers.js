@@ -54,7 +54,7 @@ const AddUsers = () => {
 
   const [officerData, setOfficerData] = useState({
     name: '',
-    phoneNumber: '',
+    email: '',
     job: '',
     pollingStation: '',
     age: '',
@@ -82,12 +82,33 @@ const AddUsers = () => {
   const handleVoterSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5001/api/admin/addVoter', voterData);
+      const formData = new FormData();
+      
+      // Append all voter data to FormData
+      Object.keys(voterData).forEach(key => {
+        formData.append(key, voterData[key]);
+      });
+
+      // Get the photo file from the form
+      const photoInput = document.querySelector('#voterPhoto');
+      if (photoInput && photoInput.files[0]) {
+        formData.append('photo', photoInput.files[0]);
+      }
+
+      const response = await axios.post('http://localhost:5000/api/admin/addVoter', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('Server response:', response.data);
+
       setSnackbar({
         open: true,
         message: 'Voter added successfully!',
         severity: 'success'
       });
+
       // Clear form
       setVoterData({
         name: '',
@@ -97,7 +118,13 @@ const AddUsers = () => {
         address: '',
         pollingStation: ''
       });
+      
+      // Clear file input
+      if (photoInput) {
+        photoInput.value = '';
+      }
     } catch (error) {
+      console.error('Error submitting voter:', error);
       setSnackbar({
         open: true,
         message: error.response?.data?.message || 'Error adding voter',
@@ -109,29 +136,83 @@ const AddUsers = () => {
   const handleOfficerSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log('Submitting officer data:', officerData);
-      const response = await axios.post('http://localhost:5000/api/admin/addOfficer', officerData);
-      setSnackbar({
-        open: true,
-        message: 'Officer added successfully!',
-        severity: 'success'
-      });
-      // Clear form
-      setOfficerData({
-        name: '',
-        phoneNumber: '',
-        job: '',
-        pollingStation: '',
-        age: '',
-        gender: ''
-      });
+        // Validate required fields
+        if (!officerData.name || !officerData.email || !officerData.job || 
+            !officerData.pollingStation || !officerData.age || !officerData.gender) {
+            setSnackbar({
+                open: true,
+                message: 'All fields are required',
+                severity: 'error'
+            });
+            return;
+        }
+
+        // Validate age
+        const ageNum = parseInt(officerData.age);
+        if (isNaN(ageNum) || ageNum < 18 || ageNum > 100) {
+            setSnackbar({
+                open: true,
+                message: 'Age must be between 18 and 100',
+                severity: 'error'
+            });
+            return;
+        }
+
+        // Validate gender
+        if (!['Male', 'Female', 'Other'].includes(officerData.gender)) {
+            setSnackbar({
+                open: true,
+                message: 'Invalid gender value. Must be one of: Male, Female, Other',
+                severity: 'error'
+            });
+            return;
+        }
+
+        // Prepare form data
+        const formData = {
+            ...officerData,
+            age: ageNum
+        };
+
+        console.log('Submitting officer data:', formData);
+        
+        const response = await axios.post('http://localhost:5000/api/admin/addOfficer', formData, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            withCredentials: true
+        });
+
+        console.log('Server response:', response.data);
+        
+        setSnackbar({
+            open: true,
+            message: 'Officer added successfully!',
+            severity: 'success'
+        });
+
+        // Clear form
+        setOfficerData({
+            name: '',
+            email: '',
+            job: '',
+            pollingStation: '',
+            age: '',
+            gender: ''
+        });
     } catch (error) {
-      console.error('Error response:', error.response?.data);
-      setSnackbar({
-        open: true,
-        message: error.response?.data?.message || 'Error adding officer',
-        severity: 'error'
-      });
+        console.error('Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        });
+
+        setSnackbar({
+            open: true,
+            message: error.response?.data?.message || error.message || 'Error adding officer',
+            severity: 'error'
+        });
     }
   };
 
@@ -225,6 +306,31 @@ const AddUsers = () => {
                 />
               </Grid>
               <Grid item xs={12}>
+                <input
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  id="voterPhoto"
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      console.log('Photo selected:', file.name);
+                    }
+                  }}
+                  required
+                />
+                <label htmlFor="voterPhoto">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    fullWidth
+                    sx={{ mb: 2 }}
+                  >
+                    Upload Photo
+                  </Button>
+                </label>
+              </Grid>
+              <Grid item xs={12}>
                 <Button
                   type="submit"
                   variant="contained"
@@ -255,9 +361,10 @@ const AddUsers = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Phone Number"
-                  name="phoneNumber"
-                  value={officerData.phoneNumber}
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={officerData.email}
                   onChange={handleOfficerChange}
                   required
                 />

@@ -161,6 +161,27 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Chart Section */
+.chart-section {
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.chart-toggle-button {
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.chart-toggle-button:hover {
+    transform: translateY(-2px);
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
     .voters-grid {
@@ -188,6 +209,15 @@
         justify-content: center;
         text-align: center;
         gap: 0.2rem;
+    }
+
+    .chart-section {
+        padding: 15px;
+    }
+
+    .chart-toggle-button {
+        padding: 6px 12px;
+        font-size: 12px;
     }
 }
 

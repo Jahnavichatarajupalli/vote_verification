@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
+import VotingChart from './Chart';
 import './VoterList.css';
 
 const VoterList = ({ onLogout }) => {
@@ -10,6 +11,7 @@ const VoterList = ({ onLogout }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [showChart, setShowChart] = useState(false);
 
     useEffect(() => {
         const fetchVoters = async () => {
@@ -67,79 +69,97 @@ const VoterList = ({ onLogout }) => {
     );
 
     return (
-        
         <div className="voter-list-page">
-            <Navbar onLogout={onLogout} />
+            <Navbar onLogout={onLogout}>
+                <button 
+                    onClick={() => setShowChart(!showChart)}
+                    className="chart-toggle-button"
+                >
+                    {showChart ? 'Hide Progress' : 'Show Progress'}
+                </button>
+            </Navbar>
             
             <div className="voter-list-container">
-                <div className="voter-list-header">
-                    <h2>{getTitle()}</h2>
-                    <div className="search-container">
-                        <input
-                            type="text"
-                            placeholder="Search by name or EPIC number..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="search-input"
-                        />
+                {/* Chart Section */}
+                {showChart && (
+                    <div className="chart-section">
+                        <VotingChart />
                     </div>
-                    <button className="back-button" onClick={() => navigate('/dashboard')}>
-                        Back to Dashboard
-                    </button>
-                </div>
+                )}
 
-                {error && <div className="error-message">{error}</div>}
-                
-                {loading ? (
-                    <div className="loading-message">Loading voters...</div>
-                ) : filteredVoters.length === 0 ? (
-                    <div className="no-voters">No voters found</div>
-                ) : (
-                    <div className="voters-grid">
-                        {filteredVoters.map((voter) => (
-                            <div key={voter.epicNo} className="voter-card">
-                                <div className="voter-photo">
-                                    {voter.photo ? (
-                                        <img src={voter.photo} alt={voter.name} />
-                                    ) : (
-                                        <div className="photo-placeholder">
-                                            {voter.name[0].toUpperCase()}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="voter-info">
-                                    <div className="info-group">
-                                        <label>Name</label>
-                                        <span>{voter.name}</span>
-                                    </div>
-                                    <div className="info-group">
-                                        <label>EPIC Number</label>
-                                        <span>{voter.epicNo}</span>
-                                    </div>
-                                    <div className="info-group">
-                                        <label>Age</label>
-                                        <span>{voter.age}</span>
-                                    </div>
-                                    <div className="info-group">
-                                        <label>Gender</label>
-                                        <span>{voter.gender}</span>
-                                    </div>
-                                    <div className="info-group">
-                                        <label>Address</label>
-                                        <span>{voter.address}</span>
-                                    </div>
-                                    {/* {type !== 'all' && (
-                                        <div className="info-group">
-                                            <label>Status</label>
-                                            <span className={`status ${voter.hasVoted ? 'voted' : 'not-voted'}`}>
-                                                {voter.hasVoted ? 'Voted' : 'Not Voted'}
-                                            </span>
-                                        </div>
-                                    )} */}
-                                </div>
+                {/* Voter List Section */}
+                {!showChart && (
+                    <>
+                        <div className="voter-list-header">
+                            <h2>{getTitle()}</h2>
+                            <div className="search-container">
+                                <input
+                                    type="text"
+                                    placeholder="Search by name or EPIC number..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="search-input"
+                                />
                             </div>
-                        ))}
-                    </div>
+                            <button className="back-button" onClick={() => navigate('/dashboard')}>
+                                Back to Dashboard
+                            </button>
+                        </div>
+
+                        {error && <div className="error-message">{error}</div>}
+                        
+                        {loading ? (
+                            <div className="loading-message">Loading voters...</div>
+                        ) : filteredVoters.length === 0 ? (
+                            <div className="no-voters">No voters found</div>
+                        ) : (
+                            <div className="voters-grid">
+                                {filteredVoters.map((voter) => (
+                                    <div key={voter.epicNo} className="voter-card">
+                                        <div className="voter-photo">
+                                            {voter.photo ? (
+                                                <img src={voter.photo} alt={voter.name} />
+                                            ) : (
+                                                <div className="photo-placeholder">
+                                                    {voter.name[0].toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="voter-info">
+                                            <div className="info-group">
+                                                <label>Name</label>
+                                                <span>{voter.name}</span>
+                                            </div>
+                                            <div className="info-group">
+                                                <label>EPIC Number</label>
+                                                <span>{voter.epicNo}</span>
+                                            </div>
+                                            <div className="info-group">
+                                                <label>Age</label>
+                                                <span>{voter.age}</span>
+                                            </div>
+                                            <div className="info-group">
+                                                <label>Gender</label>
+                                                <span>{voter.gender}</span>
+                                            </div>
+                                            <div className="info-group">
+                                                <label>Address</label>
+                                                <span>{voter.address}</span>
+                                            </div>
+                                            {/* {type !== 'all' && (
+                                                <div className="info-group">
+                                                    <label>Status</label>
+                                                    <span className={`status ${voter.hasVoted ? 'voted' : 'not-voted'}`}>
+                                                        {voter.hasVoted ? 'Voted' : 'Not Voted'}
+                                                    </span>
+                                                </div>
+                                            )} */}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>
