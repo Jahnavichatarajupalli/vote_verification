@@ -112,11 +112,11 @@ const Dashboard = ({ onLogout }) => {
                 stopVideo();
                 setFaceVerificationStarted(false);
                 
-                // Update voter status
+                // Update voter status using epicNo instead of _id
                 try {
                     const token = localStorage.getItem('token');
                     await axios.post('/api/voters/mark-voted', 
-                        { voterId: voterData.id },
+                        { epicNo: voterData.epicNo },  // Use epicNo for identification
                         { headers: { 'x-auth-token': token } }
                     );
                     
