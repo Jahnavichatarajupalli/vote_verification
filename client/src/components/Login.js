@@ -71,6 +71,7 @@ const Login = ({ onLogin }) => {
     };
 
     return (
+        <div className='total'>
         <div className="login-container">
             <div className="login-box">
                 <h2>Login to VoteAI</h2>
@@ -122,6 +123,7 @@ const Login = ({ onLogin }) => {
                     </form>
                 )}
             </div>
+        </div>
         </div>
     );
 };

@@ -1,9 +1,25 @@
+body {
+    height: 100%; /* Ensures full height */
+    margin: 0;
+    padding: 0;
+     /* Correct image path */
+   
+ }
+ .total{
+    background-image: url('https://i.pinimg.com/originals/7b/11/1c/7b111cc7f2002815c7f81bdbe4f2b64c.jpg');
+    background-size: cover; /* Covers entire screen */
+    background-position: center;
+    background-repeat: no-repeat;
+ }
 .login-container {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+   
+    /* background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); */
+    position: relative;
+    right: 300px;
 }
 
 .login-box {
