@@ -7,6 +7,8 @@ import './Dashboard.css';
 import { loadFaceApiModels, createFaceMatcher, startVideo, stopVideo, verifyFace } from '../utils/faceVerification';
 import { validateEpicNumber } from '../utils/epicValidation';
 import { VoiceMessages } from '../utils/speechUtils';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Dashboard = ({ onLogout }) => {
     const navigate = useNavigate();
@@ -20,6 +22,8 @@ const Dashboard = ({ onLogout }) => {
     const [showChart, setShowChart] = useState(false);
     const videoRef = useRef(null);
 
+    // Remove all speech-related state and functions since we want voice always on
+    
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -43,16 +47,15 @@ const Dashboard = ({ onLogout }) => {
         setError('');
         setSuccess('');
         setLoading(true);
-
-        // First validate EPIC number format
+    
         const validation = validateEpicNumber(epicNo);
         if (!validation.isValid) {
-            setError(validation.message);
-            VoiceMessages.invalidEpicFormat();
+            toast.error(validation.message);
+            VoiceMessages.error(validation.message);
             setLoading(false);
             return;
         }
-
+    
         try {
             const token = localStorage.getItem('token');
             const res = await axios.post('/api/voters/verify', 
@@ -60,23 +63,26 @@ const Dashboard = ({ onLogout }) => {
                 { headers: { 'x-auth-token': token } }
             );
             setVoterData(res.data.voter);
-            console.log(res.data.voter)
             setLoading(false);
             setStep('face');
+            toast.success('EPIC number verified successfully');
             VoiceMessages.success('EPIC number verified successfully');
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Verification failed';
-            setError(errorMessage);
             setVoterData(null);
             setLoading(false);
             
             if (errorMessage.includes('not found')) {
+                toast.error('EPIC number not found');
                 VoiceMessages.epicNotFound();
             } else if (errorMessage.includes('polling station')) {
+                toast.error('Wrong polling station');
                 VoiceMessages.wrongPollingStation();
             } else if (errorMessage.includes('already cast')) {
+                toast.error('Voter has already cast their vote');
                 VoiceMessages.duplicateVote();
             } else {
+                toast.error(errorMessage);
                 VoiceMessages.error(errorMessage);
             }
         }
@@ -87,15 +93,17 @@ const Dashboard = ({ onLogout }) => {
             setError('');
             setLoading(true);
             setFaceVerificationStarted(true);
-
-            // Initialize face matcher with voter's stored photo
+    
             await createFaceMatcher(voterData.photo);
-            
-            // Start video stream
             await startVideo(videoRef.current);
+            
+            toast.info('Please look at the camera for face verification');
+            VoiceMessages.success('Please look at the camera for face verification');
             setLoading(false);
         } catch (err) {
-            setError('Failed to start face verification: ' + err.message);
+            const errorMessage = 'Failed to start face verification: ' + err.message;
+            toast.error(errorMessage);
+            VoiceMessages.error(errorMessage);
             setLoading(false);
             setFaceVerificationStarted(false);
         }
@@ -106,36 +114,36 @@ const Dashboard = ({ onLogout }) => {
             setLoading(true);
             setError('');
             
+            // toast.info('Starting face verification process');
+            // VoiceMessages.success('Starting face verification process');
             const isMatch = await verifyFace(videoRef.current);
             
             if (isMatch) {
                 stopVideo();
                 setFaceVerificationStarted(false);
                 
-                // Update voter status using epicNo instead of _id
                 try {
                     const token = localStorage.getItem('token');
                     await axios.post('/api/voters/mark-voted', 
-                        { epicNo: voterData.epicNo },  // Use epicNo for identification
+                        { epicNo: voterData.epicNo },
                         { headers: { 'x-auth-token': token } }
                     );
                     
                     setStep('approved');
                     setSuccess('Voter verification successful!');
+                    // toast.success('Voter verification successful!');
                     VoiceMessages.verificationSuccess();
                 } catch (err) {
                     const errorMessage = 'Error updating voter status: ' + (err.response?.data?.message || err.message);
-                    setError(errorMessage);
-                    VoiceMessages.error(errorMessage);
-                    return;
+                    toast.error(errorMessage);
                 }
             } else {
-                setError('Face verification failed. Please try again.');
+                toast.error('Face verification failed. Please try again.');
                 VoiceMessages.verificationFailed();
             }
         } catch (err) {
             const errorMessage = 'Face verification error: ' + err.message;
-            setError(errorMessage);
+            toast.error(errorMessage);
             VoiceMessages.error(errorMessage);
         } finally {
             setLoading(false);
@@ -178,15 +186,18 @@ const Dashboard = ({ onLogout }) => {
         setShowChart(!showChart);
     };
 
+    // Update Navbar section
     return (
         <div className="dashboard-container">
             <Navbar onLogout={handleLogout}>
-                <button 
-                    onClick={toggleChart}
-                    className="chart-toggle-button"
-                >
-                    {showChart ? 'Hide Progress' : 'Show Progress'}
-                </button>
+                <div className="navbar-buttons">
+                    <button 
+                        onClick={toggleChart}
+                        className="chart-toggle-button"
+                    >
+                        {showChart ? 'Hide Progress' : 'Show Progress'}
+                    </button>
+                </div>
             </Navbar>
             
             <div className="dashboard-content">

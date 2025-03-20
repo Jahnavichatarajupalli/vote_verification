@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import VoterList from './VoterList';
 import './Navbar.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { toast } from 'react-toastify';
 
 
 const Navbar = ({ onLogout, children }) => {
@@ -26,7 +27,8 @@ const Navbar = ({ onLogout, children }) => {
                     return;
                 }
 
-                const response = await fetch('api/auth/officer', {
+                // Update the API endpoint to use the correct URL
+                const response = await fetch('http://localhost:5000/api/officers/profile', {
                     headers: {
                         'x-auth-token': token,
                         'Content-Type': 'application/json'
@@ -34,18 +36,23 @@ const Navbar = ({ onLogout, children }) => {
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch officer details');
+                    toast.error('Failed to fetch officer details');
+                    return;
                 }
 
                 const data = await response.json();
                 setOfficerDetails(data);
             } catch (err) {
                 console.error('Error fetching officer details:', err);
+                setOfficerDetails(null);
             }
         };
 
-        fetchOfficerDetails();
-    }, [navigate]);
+        // Call fetchOfficerDetails when showProfile changes
+        if (showProfile) {
+            fetchOfficerDetails();
+        }
+    }, [navigate, showProfile]);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -139,6 +146,7 @@ const Navbar = ({ onLogout, children }) => {
         if (onLogout) {
             onLogout();
         }
+        toast.success('Logged out successfully');
         navigate('/login');
     };
 

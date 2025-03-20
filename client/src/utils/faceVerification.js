@@ -139,6 +139,7 @@ export const verifyFace = async (videoElement) => {
         console.log('Match result:', match.toString());
         
         const isMatch = match.label === 'voter' && match.distance < 0.5;
+        // Always use voice feedback
         if (isMatch) {
             VoiceMessages.verificationSuccess();
         } else {
@@ -152,3 +153,5 @@ export const verifyFace = async (videoElement) => {
         throw error;
     }
 };
+
+
