@@ -186,10 +186,18 @@ const Dashboard = ({ onLogout }) => {
         setShowChart(!showChart);
     };
 
+    // Add this new function to handle navigation with chart closing
+    const handleNavigation = (path) => {
+        if (showChart) {
+            setShowChart(false);
+        }
+        navigate(path);
+    };
+
     // Update Navbar section
     return (
         <div className="dashboard-container">
-            <Navbar onLogout={handleLogout}>
+            <Navbar onLogout={handleLogout} onNavigate={handleNavigation}>
                 <div className="navbar-buttons">
                     <button 
                         onClick={toggleChart}

@@ -6,7 +6,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import { toast } from 'react-toastify';
 
 
-const Navbar = ({ onLogout, children }) => {
+const Navbar = ({ onLogout, children, onNavigate }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [stats, setStats] = useState(null);
@@ -137,8 +137,16 @@ const Navbar = ({ onLogout, children }) => {
         }
     };
 
+    const handleNavigation = (path) => {
+        if (onNavigate) {
+            onNavigate(path);
+        } else {
+            navigate(path);
+        }
+    };
+
     const handleStatClick = (type) => {
-        navigate(`/voters/${type}`);
+        handleNavigation(`/voters/${type}`);
     };
 
     const handleLogout = () => {
@@ -185,21 +193,18 @@ const Navbar = ({ onLogout, children }) => {
                                 onClick={() => handleStatClick('all')}
                             >
                                 <span className="stats-label">Total Voters</span>
-                                {/* <span className="stat-value">{stats.total}</span> */}
                             </div>
                             <div 
                                 className={`stats-item voted ${location.pathname === '/voters/voted' ? 'active' : ''}`} 
                                 onClick={() => handleStatClick('voted')}
                             >
                                 <span className="stats-label">Voted</span>
-                                {/* <span className="stat-value">{stats.voted}</span> */}
                             </div>
                             <div 
                                 className={`stats-item non-voted ${location.pathname === '/voters/yet-to-vote' ? 'active' : ''}`} 
                                 onClick={() => handleStatClick('yet-to-vote')}
                             >
                                 <span className="stats-label">Yet to Vote</span>
-                                {/* <span className="stat-value">{stats.nonVoted}</span> */}
                             </div>
                         </>
                     ) : (
