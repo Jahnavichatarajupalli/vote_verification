@@ -308,3 +308,49 @@
     }
 }
 
+/* Remove or comment out the old speech-toggle styles */
+/* .speech-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+} */
+
+/* Add these new styles */
+.navbar-buttons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.speech-toggle-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.speech-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.speech-toggle-btn.active {
+    color: #4CAF50;
+}
+
+.speech-toggle-btn i {
+    font-size: 20px;
+}
+
+/* Adjust the existing chart-toggle-button style */
+.chart-toggle-button {
+    margin-left: 0; /* Remove negative margin */
+}
+

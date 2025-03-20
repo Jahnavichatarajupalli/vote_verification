@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import VotingChart from './Chart';
 import './VoterList.css';
+import { toast } from 'react-toastify';
 
 const VoterList = ({ onLogout }) => {
     const { type } = useParams();
@@ -41,9 +42,11 @@ const VoterList = ({ onLogout }) => {
                 const data = await response.json();
                 setVoters(data.voters);
                 setError('');
+                toast.success('Voters list loaded successfully');
             } catch (err) {
                 console.error('Error fetching voters:', err);
                 setError(err.message || 'Failed to load voters');
+                toast.error('Failed to load voters list');
             } finally {
                 setLoading(false);
             }

@@ -332,11 +332,24 @@ app.get('/api/officers/profile', async (req, res) => {
     try {
         const token = req.headers['x-auth-token'];
         if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
+        
         const decoded = jwt.verify(token, JWT_SECRET);
         const officer = await Officer.findById(decoded.id);
         if (!officer) return res.status(404).json({ message: 'Officer not found' });
-        res.json(officer);
+
+        // Decrypt the officer data before sending
+        const decryptedOfficer = {
+            name: decrypt(officer.name),
+            email: decrypt(officer.email),
+            job: decrypt(officer.job),
+            pollingStation: decrypt(officer.pollingStation),
+            age: officer.age, // age is not encrypted
+            gender: decrypt(officer.gender)
+        };
+        
+        res.json(decryptedOfficer);
     } catch (error) {
+        console.error('Profile fetch error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

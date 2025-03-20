@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import './Login.css';
 
 const Login = ({ onLogin }) => {
@@ -54,6 +55,7 @@ const Login = ({ onLogin }) => {
             // Update auth state and redirect
             onLogin();
             navigate('/dashboard');
+            toast.success('Login successful!');
         } catch (err) {
             console.error('OTP verification error:', err);
             setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
