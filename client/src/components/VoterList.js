@@ -14,6 +14,13 @@ const VoterList = ({ onLogout }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showChart, setShowChart] = useState(false);
 
+    const handleNavigation = (path) => {
+        if (showChart) {
+            setShowChart(false);
+        }
+        navigate(path);
+    };
+
     useEffect(() => {
         const fetchVoters = async () => {
             try {
@@ -42,7 +49,7 @@ const VoterList = ({ onLogout }) => {
                 const data = await response.json();
                 setVoters(data.voters);
                 setError('');
-                toast.success('Voters list loaded successfully');
+                // toast.success('Voters list loaded successfully');
             } catch (err) {
                 console.error('Error fetching voters:', err);
                 setError(err.message || 'Failed to load voters');
@@ -73,13 +80,15 @@ const VoterList = ({ onLogout }) => {
 
     return (
         <div className="voter-list-page">
-            <Navbar onLogout={onLogout}>
-                <button 
-                    onClick={() => setShowChart(!showChart)}
-                    className="chart-toggle-button"
-                >
-                    {showChart ? 'Hide Progress' : 'Show Progress'}
-                </button>
+            <Navbar onLogout={onLogout} onNavigate={handleNavigation}>
+                <div className="navbar-buttons">
+                    <button 
+                        onClick={() => setShowChart(!showChart)}
+                        className="chart-toggle-button"
+                    >
+                        {showChart ? 'Hide Progress' : 'Show Progress'}
+                    </button>
+                </div>
             </Navbar>
             
             <div className="voter-list-container">
@@ -104,7 +113,7 @@ const VoterList = ({ onLogout }) => {
                                     className="search-input"
                                 />
                             </div>
-                            <button className="back-button" onClick={() => navigate('/dashboard')}>
+                            <button className="back-button" onClick={() => handleNavigation('/dashboard')}>
                                 Back to Dashboard
                             </button>
                         </div>
