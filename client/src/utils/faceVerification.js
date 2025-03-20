@@ -1,6 +1,6 @@
 // Import face-api from local file
 import { speak, VoiceMessages } from './speechUtils';
-
+import { toast } from 'react-toastify';
 const getFaceApi = () => {
     if (!window.faceapi) {
         console.error('face-api.js is not loaded on window object');
@@ -20,13 +20,118 @@ export const loadFaceApiModels = async () => {
         await Promise.all([
             faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
             faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-            faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+            faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+            faceapi.nets.faceExpressionNet.loadFromUri('/models')
         ]);
         console.log('Face-api models loaded successfully');
     } catch (error) {
         console.error('Error loading face-api models:', error);
         throw error;
     }
+};
+
+// Add liveness detection function
+// Update detectLiveness function to be more accurate
+export const detectLiveness = async (videoElement) => {
+    const faceapi = getFaceApi();
+    const detections = await faceapi
+        .detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceExpressions();
+
+    if (!detections) return false;
+
+    // Strict blink detection using multiple expression indicators
+    const expressions = detections.expressions;
+    const isBlinking = expressions.surprised > 0.5 && expressions.neutral < 0.3;
+    console.log('Blink Detection Values:', {
+        surprised: expressions.surprised,
+        neutral: expressions.neutral,
+        isBlinking: isBlinking
+    });
+    return isBlinking;
+};
+
+export const verifyFace = async (videoElement) => {
+    try {
+        const faceapi = getFaceApi();
+        
+        const detection = await faceapi
+            .detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+        if (!detection) {
+            VoiceMessages.noFaceDetected();
+            throw new Error('No face detected in camera feed');
+        }
+
+        console.log('Face detected, matching with stored face...');
+        const match = faceMatcher.findBestMatch(detection.descriptor);
+        console.log('Match result:', match.toString());
+        
+        const isMatch = match.label === 'voter' && match.distance < 0.45;
+        
+        if (!isMatch) {
+            // Clear error message for face mismatch
+            console.log('Face does not match with voter record');
+            toast.error('Face does not match with voter record. Verification failed')
+            VoiceMessages.error("Face does not match with voter record. Verification failed.");
+            
+            return false;
+        }
+
+        // Rest of the verification process...
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log("Face matched, requesting blink verification");
+        toast.success('Face matched! Please blink once to complete verification')
+        await VoiceMessages.success("Face matched! Please blink once to complete verification");
+        
+        return await checkForBlink(videoElement);
+
+    } catch (error) {
+        console.error('Error in face verification:', error);
+        toast.error('An error occurred during face verification')
+        VoiceMessages.systemError('An error occurred during face verification');
+        throw error;
+    }
+};
+
+// Separate function for blink detection
+const checkForBlink = async (videoElement) => {
+    const faceapi = getFaceApi();  // Add this line to get faceapi reference
+    let blinkDetected = false;
+    let attempts = 0;
+    const maxAttempts = 150;
+
+    while (!blinkDetected && attempts < maxAttempts) {
+        const detections = await faceapi
+            .detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceExpressions();
+
+        if (detections) {
+            const expressions = detections.expressions;
+            blinkDetected = expressions.surprised > 0.5 && expressions.neutral < 0.3;
+            
+            if (!blinkDetected && attempts % 30 === 0) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                toast.error('Please blink to complete verification')
+                await VoiceMessages.error("Please blink to complete verification");
+            }
+        }
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    if (!blinkDetected) {
+        toast.error('No blink detected. Verification failed.')
+        VoiceMessages.error("No blink detected. Verification failed.");
+        return false;
+    }
+
+    VoiceMessages.verificationSuccess();
+    return true;
 };
 
 export const createFaceMatcher = async (voterImage) => {
@@ -103,54 +208,6 @@ export const stopVideo = () => {
         console.log('Stopping video stream');
         videoStream.getTracks().forEach(track => track.stop());
         videoStream = null;
-    }
-};
-
-export const verifyFace = async (videoElement) => {
-    try {
-        const faceapi = getFaceApi();
-        
-        if (!faceMatcher) {
-            const errorMsg = 'Face matcher not initialized';
-            VoiceMessages.systemError(errorMsg);
-            throw new Error(errorMsg);
-        }
-
-        if (!videoElement) {
-            const errorMsg = 'Video element is not available';
-            VoiceMessages.systemError(errorMsg);
-            throw new Error(errorMsg);
-        }
-
-        console.log('Detecting face in video feed...');
-        const detection = await faceapi
-            .detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions())
-            .withFaceLandmarks()
-            .withFaceDescriptor();
-
-        if (!detection) {
-            const errorMsg = 'No face detected in camera feed';
-            VoiceMessages.noFaceDetected();
-            throw new Error(errorMsg);
-        }
-
-        console.log('Face detected, matching with stored face...');
-        const match = faceMatcher.findBestMatch(detection.descriptor);
-        console.log('Match result:', match.toString());
-        
-        const isMatch = match.label === 'voter' && match.distance < 0.5;
-        // Always use voice feedback
-        if (isMatch) {
-            VoiceMessages.verificationSuccess();
-        } else {
-            VoiceMessages.verificationFailed();
-        }
-        
-        return isMatch;
-    } catch (error) {
-        console.error('Error in face verification:', error);
-        VoiceMessages.systemError('An error occurred during face verification');
-        throw error;
     }
 };
 

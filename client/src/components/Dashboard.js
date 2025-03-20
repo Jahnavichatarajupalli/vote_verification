@@ -97,8 +97,26 @@ const Dashboard = ({ onLogout }) => {
             await createFaceMatcher(voterData.photo);
             await startVideo(videoRef.current);
             
-            toast.info('Please look at the camera for face verification');
-            VoiceMessages.success('Please look at the camera for face verification');
+            const isVerified = await verifyFace(videoRef.current);
+            
+            if (isVerified) {
+                try {
+                    const token = localStorage.getItem('token');
+                    await axios.post('/api/voters/mark-voted', 
+                        { epicNo: voterData.epicNo },
+                        { headers: { 'x-auth-token': token } }
+                    );
+                    
+                    setStep('approved');
+                    setSuccess('Voter verification successful!');
+                } catch (err) {
+                    const errorMessage = 'Error updating voter status: ' + (err.response?.data?.message || err.message);
+                    toast.error(errorMessage);
+                }
+            }
+            
+            stopVideo();
+            setFaceVerificationStarted(false);
             setLoading(false);
         } catch (err) {
             const errorMessage = 'Failed to start face verification: ' + err.message;
