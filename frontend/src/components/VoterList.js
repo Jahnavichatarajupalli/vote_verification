@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { API_BASE_URL } from '../config/config';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import VotingChart from './Chart';
@@ -25,42 +27,19 @@ const VoterList = ({ onLogout }) => {
         const fetchVoters = async () => {
             try {
                 const token = localStorage.getItem('token');
-                if (!token) {
-                    navigate('/login');
-                    return;
-                }
-
-                let endpoint = '/api/voters/all';
-                if (type === 'voted') endpoint = '/api/voters/voted';
-                if (type === 'yet-to-vote') endpoint = '/api/voters/yet-to-vote';
-
-                const response = await fetch(`http://localhost:5000${endpoint}`, {
-                    headers: {
-                        'x-auth-token': token,
-                        'Content-Type': 'application/json'
-                    }
+                const response = await axios.get(`${API_BASE_URL}/api/voters/${type}`, {
+                    headers: { 'x-auth-token': token }
                 });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to fetch voters');
-                }
-
-                const data = await response.json();
-                setVoters(data.voters);
-                setError('');
-                // toast.success('Voters list loaded successfully');
-            } catch (err) {
-                console.error('Error fetching voters:', err);
-                setError(err.message || 'Failed to load voters');
-                toast.error('Failed to load voters list');
+                setVoters(response.data.voters);
+            } catch (error) {
+                console.error('Error fetching voters:', error);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchVoters();
-    }, [type, navigate]);
+    }, [type]);
 
     const getTitle = () => {
         switch (type) {
