@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '../config/config';
 import VoterList from './VoterList';
 import './Navbar.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -29,8 +30,7 @@ const Navbar = ({ onLogout, children, onNavigate }) => {
                     return;
                 }
 
-                // Update the API endpoint to use the correct URL
-                const response = await fetch('http://localhost:5000/api/officers/profile', {
+                const response = await fetch(`${API_BASE_URL}/api/officers/profile`, {
                     headers: {
                         'x-auth-token': token,
                         'Content-Type': 'application/json'
@@ -65,7 +65,7 @@ const Navbar = ({ onLogout, children, onNavigate }) => {
                     return;
                 }
 
-                const response = await fetch('http://localhost:5000/api/voters/statistics', {
+                const response = await fetch(`${API_BASE_URL}/api/voters/statistics`, {
                     headers: {
                         'x-auth-token': token,
                         'Content-Type': 'application/json'
@@ -109,7 +109,7 @@ const Navbar = ({ onLogout, children, onNavigate }) => {
             if (type === 'voted') endpoint = '/api/voters/voted';
             if (type === 'non-voted') endpoint = '/api/voters/yet-to-vote';
 
-            const response = await fetch(`http://localhost:5000${endpoint}`, {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 headers: {
                     'x-auth-token': token,
                     'Content-Type': 'application/json'

@@ -35,17 +35,18 @@ const decryptVoterData = (voter) => {
 // @access  Private
 router.get('/statistics', verifyToken, async (req, res) => {
     try {
-        const pollingStation = req.officer.pollingStation;
+        const pollingStation = encrypt(req.officer.pollingStation);
         
         // Get total voters count
         const totalVoters = await Voter.countDocuments({ pollingStation });
+        console.log(totalVoters)
         
         // Get voted voters count
         const votedCount = await Voter.countDocuments({ 
             pollingStation,
             voted: true 
         });
-        
+        console.log(votedCount)
         // Get non-voted voters count
         const nonVotedCount = await Voter.countDocuments({ 
             pollingStation,
@@ -56,7 +57,7 @@ router.get('/statistics', verifyToken, async (req, res) => {
             total: totalVoters,
             voted: votedCount,
             nonVoted: nonVotedCount,
-            pollingStation
+            pollingStation:decrypt(pollingStation)
         });
     } catch (error) {
         console.error('Error fetching voter statistics:', error);

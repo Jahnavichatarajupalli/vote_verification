@@ -2,6 +2,7 @@ import React from 'react';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/config';
 import './Chart.css';
 
 // Register the required Chart.js components
@@ -11,18 +12,28 @@ const VotingChart = () => {
     const [votingStats, setVotingStats] = React.useState(null);
     const [statsLoading, setStatsLoading] = React.useState(false);
 
-    // Function to fetch voting statistics
     const fetchVotingStatistics = async () => {
         setStatsLoading(true);
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
-
-            const response = await axios.get('/api/voters/statistics', {
+    
+            const response = await axios.get(`${API_BASE_URL}/api/voters/statistics`, {
                 headers: { 'x-auth-token': token }
             });
             
-            setVotingStats(response.data);
+            // Log the response to check the data structure
+            console.log('Statistics response:', response.data);
+            console.log(response.data.total);
+            console.log(response.data.voted);
+            console.log(response.data.nonVoted);
+            
+            setVotingStats({
+                total: response.data.total || 0,
+                voted: response.data.voted || 0,
+                nonVoted: response.data.nonVoted || 0,
+                pollingStation: response.data.pollingStation || ''
+            });
         } catch (err) {
             console.error('Error fetching voting statistics:', err);
         } finally {
@@ -160,4 +171,4 @@ const VotingChart = () => {
     );
 };
 
-export default VotingChart; 
+export default VotingChart;

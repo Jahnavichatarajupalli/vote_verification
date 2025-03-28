@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/config';
 import Navbar from './Navbar';
 import VotingChart from './Chart';
 import './Dashboard.css';
@@ -58,7 +59,7 @@ const Dashboard = ({ onLogout }) => {
     
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('/api/voters/verify', 
+            const res = await axios.post(`${API_BASE_URL}/api/voters/verify`, 
                 { epicNo },
                 { headers: { 'x-auth-token': token } }
             );
@@ -102,7 +103,7 @@ const Dashboard = ({ onLogout }) => {
             if (isVerified) {
                 try {
                     const token = localStorage.getItem('token');
-                    await axios.post('/api/voters/mark-voted', 
+                    await axios.post(`${API_BASE_URL}/api/voters/mark-voted`, 
                         { epicNo: voterData.epicNo },
                         { headers: { 'x-auth-token': token } }
                     );
@@ -142,7 +143,7 @@ const Dashboard = ({ onLogout }) => {
                 
                 try {
                     const token = localStorage.getItem('token');
-                    await axios.post('/api/voters/mark-voted', 
+                    await axios.post(`${API_BASE_URL}/api/voters/mark-voted`, 
                         { epicNo: voterData.epicNo },
                         { headers: { 'x-auth-token': token } }
                     );
@@ -352,3 +353,9 @@ const Dashboard = ({ onLogout }) => {
 };
 
 export default Dashboard;
+<div className="dashboard-header">
+    <div className="header-logo">
+        <img src="/icon.jpg" alt="VoteAI Logo" />
+        <h1>Dashboard</h1>
+    </div>
+</div>
