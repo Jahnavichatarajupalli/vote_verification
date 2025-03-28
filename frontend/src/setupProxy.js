@@ -4,7 +4,7 @@ module.exports = function(app) {
   app.use(
     '/api',
     createProxyMiddleware({
-      target: 'https://vote-verification-backend.onrender.com',
+      target: 'https://vote-verification.onrender.com',
       changeOrigin: true,
       secure: false,
       headers: {
