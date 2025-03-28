@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { API_BASE_URL } from '../config/config';
 import './Login.css';
 
 const Login = ({ onLogin }) => {
@@ -31,7 +32,7 @@ const Login = ({ onLogin }) => {
         setError('');
 
         try {
-            await axios.post('/api/auth/request-otp', { email });
+            await axios.post(`${API_BASE_URL}/api/auth/request-otp`, { email });
             setOtpSent(true);
             setTimer(60); // Reset timer
         } catch (err) {
@@ -48,7 +49,7 @@ const Login = ({ onLogin }) => {
         setError('');
 
         try {
-            const res = await axios.post('/api/auth/verify-otp', { email, otp });
+            const res = await axios.post(`${API_BASE_URL}/api/auth/verify-otp`, { email, otp });
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('officerData', JSON.stringify(res.data.officer));
 
